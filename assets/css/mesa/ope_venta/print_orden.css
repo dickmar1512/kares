@@ -1,0 +1,177 @@
+@media print {
+    .no-print { display: none; }
+    body { margin: 0; padding: 0; }
+}
+
+.ticket-container {
+    width: 80mm;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 5mm;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+    background: #fff;
+    line-height: 1.4;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.logo {
+    max-width: 120px;
+    height: auto;
+    margin-bottom: 8px;
+    /*filter: grayscale(100%);*/
+}
+
+.company-name {
+    font-weight: 800;
+    font-size: 14px;
+    text-transform: uppercase;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.company-info {
+    font-size: 10px;
+    color: #666;
+    margin: 2px 0;
+}
+
+.order-title-box {
+    border: 1.5px solid #000;
+    margin: 10px 0;
+    padding: 5px;
+    text-align: center;
+}
+
+.ruc {
+    font-size: 11px;
+    font-weight: bold;
+    display: block;
+}
+
+.order-type {
+    font-size: 13px;
+    font-weight: 800;
+    display: block;
+    margin: 2px 0;
+}
+
+.order-number {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.info-section {
+    font-size: 10.5px;
+    margin-bottom: 12px;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 8px;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 2px;
+}
+
+.info-label {
+    font-weight: bold;
+    width: 85px;
+    flex-shrink: 0;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    margin-bottom: 12px;
+}
+
+.items-table th {
+    border-bottom: 1.5px solid #000;
+    text-align: left;
+    padding: 4px 2px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.items-table td {
+    padding: 6px 2px;
+    vertical-align: top;
+    border-bottom: 0.5px solid #eee;
+}
+
+.col-desc { width: 50%; }
+.col-qty { width: 15%; text-align: center; }
+.col-price { width: 15%; text-align: right; }
+.col-total { width: 20%; text-align: right; font-weight: bold; }
+
+.totals-section {
+    margin-top: 10px;
+    font-size: 11px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 3px;
+}
+
+.total-label {
+    width: 100px;
+    text-align: right;
+    padding-right: 10px;
+}
+
+.total-value {
+    width: 70px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.grand-total {
+    border-top: 1px solid #000;
+    padding-top: 5px;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.letras {
+    font-size: 9px;
+    font-style: italic;
+    margin-top: 10px;
+    text-align: center;
+    border-top: 1px dashed #ccc;
+    padding-top: 8px;
+}
+
+.footer-note {
+    font-size: 8.5px;
+    text-align: center;
+    margin-top: 15px;
+    color: #555;
+    line-height: 1.2;
+}
+
+.user-info {
+    font-size: 8px;
+    color: #888;
+    margin-top: 10px;
+    text-align: left;
+}
+
+.btn-print {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.btn-print:hover { background: #0056b3; }

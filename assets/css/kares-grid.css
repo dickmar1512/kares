@@ -1,0 +1,179 @@
+/* 
+ * Kares ERP - Unified Grid Styles
+ * Standardized based on administrador/conf_utilidad
+ */
+
+:root {
+    --kares-primary: #1a3c6e;
+    --kares-secondary: #3d5170;
+    --kares-header-bg: #eef1f7;
+    --kares-border: #e4e8ef;
+    --kares-table-border: #d0d8e8;
+    --kares-row-hover: #f5f7fc;
+    --kares-text-muted: #6c757d;
+    --kares-success: #27ae60;
+    --kares-warning: #e67e22;
+}
+
+/* ── Page Header ──────────────────────────────────────── */
+.page-header-bar {
+    background: #fff;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.page-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--kares-primary);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.page-header-bar h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--kares-primary);
+}
+.page-header-bar small {
+    display: block;
+    color: var(--kares-text-muted);
+    font-size: 11px;
+}
+
+/* ── Cards ────────────────────────────────────────────── */
+.card-kares {
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    border: 1px solid var(--kares-border);
+    border-radius: 6px;
+    margin-bottom: 14px;
+    background: #fff;
+}
+.card-kares .card-header {
+    background: var(--kares-primary);
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 5px 5px 0 0 !important;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: unset;
+}
+.card-kares .card-header.warning-header {
+    background: var(--kares-warning);
+}
+.card-kares .card-header .card-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 0;
+    color: #fff;
+}
+.card-kares .card-body {
+    padding: 14px;
+}
+.card-kares .card-header .badge-count {
+    margin-left: auto;
+    background: rgba(255,255,255,.2);
+    font-size: 10.5px;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+/* ── Table ────────────────────────────────────────────── */
+.table-kares {
+    font-size: 12px;
+    margin: 0;
+    width: 100% !important;
+}
+.table-kares thead tr th {
+    background: var(--kares-header-bg);
+    color: var(--kares-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--kares-table-border) !important;
+    border-top: none;
+    white-space: nowrap;
+}
+.table-kares tbody tr td {
+    padding: 6px 10px;
+    vertical-align: middle;
+    border-top: 1px solid #edf0f5;
+}
+.table-kares tbody tr:hover {
+    background: var(--kares-row-hover);
+}
+
+/* ── Action buttons ───────────────────────────────────── */
+.btn-kares {
+    background: var(--kares-primary);
+    border: none;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: background .2s;
+    text-decoration: none;
+}
+.btn-kares:hover {
+    background: #132d54;
+    color: #fff;
+    text-decoration: none;
+}
+.btn-kares-success {
+    background: var(--kares-success);
+}
+.btn-kares-success:hover {
+    background: #219150;
+}
+
+/* ── DataTables overrides ─────────────────────────────── */
+.dataTables_wrapper .dataTables_filter input {
+    height: 28px;
+    font-size: 12px;
+    border: 1px solid #cdd4de;
+    border-radius: 4px;
+    padding: 3px 8px;
+}
+.dataTables_wrapper .dataTables_length select {
+    height: 28px;
+    font-size: 12px;
+    border: 1px solid #cdd4de;
+    border-radius: 4px;
+}
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    font-size: 11.5px;
+    margin-top: 10px;
+}
+.dataTables_wrapper .paginate_button {
+    font-size: 11.5px !important;
+    padding: 3px 8px !important;
+}
+
+/* Utilities */
+.amount { text-align: right; font-weight: 600; color: var(--kares-primary); white-space: nowrap; }
+.code { font-family: 'Courier New', monospace; font-size: 11px; color: #5a6a7e; }
+.badge-kares {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+}

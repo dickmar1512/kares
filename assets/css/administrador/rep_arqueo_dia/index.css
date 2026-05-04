@@ -1,0 +1,16 @@
+/* Styles for Arqueo Diario Index */
+html, body { height: 100%; margin: 0; padding: 0; background: #f4f6f9; font-size: 13px; }
+.wrapper { display: flex; flex-direction: column; height: 100vh; }
+.content-area { padding: 12px 14px 0; flex-shrink: 0; }
+.filter-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.filter-group { display: flex; flex-direction: column; }
+.filter-group label { font-size: 10.5px; font-weight: 700; color: #3d5170; margin-bottom: 3px; text-transform: uppercase; }
+.date-input { width: 110px; }
+.input-icon-wrap { position: relative; }
+.input-icon-wrap i { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 10px; pointer-events: none; }
+.input-icon-wrap .form-control { padding-left: 24px; }
+.btn-search { background: #1a3c6e; color: #fff; border: none; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; height: 30px; display: inline-flex; align-items: center; gap: 5px; transition: background .2s; }
+.btn-search:hover { background: #132d54; box-shadow: 0 3px 8px rgba(26,60,110,.3); }
+.frame-wrapper { flex: 1; padding: 0 14px 10px; overflow: hidden; display: flex; flex-direction: column; }
+.frame-card { flex: 1; background: #fff; border: 1px solid #e4e8ef; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
+.results-frame { width: 100%; height: 100%; border: none; display: block; }

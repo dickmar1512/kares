@@ -1,0 +1,178 @@
+body {
+    background: #f4f6f9;
+    overflow-x: hidden;
+}
+
+/* Tabs Modernos */
+.card-primary.card-outline-tabs>.card-header {
+    background: #ffffff;
+    border-bottom: 2px solid #e9ecef;
+    padding: 10px 15px;
+}
+
+.card-primary.card-outline-tabs>.card-header .nav-tabs {
+    border-bottom: none;
+    margin-bottom: 0;
+    flex-wrap: wrap;
+}
+
+.card-primary.card-outline-tabs>.card-header .nav-item {
+    margin-bottom: 5px;
+    margin-right: 5px;
+}
+
+.card-primary.card-outline-tabs>.card-header .nav-link {
+    border: 2px solid transparent;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 10px 16px;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.card-primary.card-outline-tabs>.card-header .nav-link:hover {
+    background: #e9ecef;
+    color: #495057;
+    transform: translateY(-2px);
+}
+
+.card-primary.card-outline-tabs>.card-header .nav-link.active {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.card-primary.card-outline-tabs>.card-header .nav-link i {
+    font-size: 16px;
+}
+
+/* Grid de Productos */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 15px;
+}
+
+.product-box {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+}
+
+.product-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    border-color: #007bff;
+}
+
+.product-box h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.product-box .price {
+    color: #28a745;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.product-box .btn-add {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+}
+
+.product-box .qty-input {
+    width: 60px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Animación de tabs */
+.tab-pane {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+
+    .card-primary.card-outline-tabs>.card-header .nav-link {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+}
+
+.content-wrapper {
+    margin-left: 0 !important;
+}
+
+/* Animación para producto agregado */
+.product-added {
+    animation: pulse 0.5s ease-in-out;
+    background-color: #d4edda !important;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        background-color: #fff;
+    }
+    50% {
+        transform: scale(1.02);
+        background-color: #d4edda;
+    }
+    100% {
+        transform: scale(1);
+        background-color: #fff;
+    }
+}
+
+.btn-add-producto:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Mejora visual para inputs de cantidad */
+.cantidad-input {
+    text-align: center;
+}
+
+/* Notificaciones flotantes */
+#custom-notification {
+    pointer-events: none;
+}
+
+#custom-notification .alert {
+    pointer-events: auto;
+}

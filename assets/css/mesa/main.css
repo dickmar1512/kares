@@ -1,0 +1,98 @@
+/* Dashboard CSS */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #2af598 0%, #009efd 100%);
+    --warning-gradient: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    --danger-gradient: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+body {
+    background-color: #f4f6f9;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+.dashboard-container {
+    padding: 20px;
+}
+
+/* Summary Cards */
+.small-box {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.small-box:hover {
+    transform: translateY(-5px);
+}
+
+.small-box.bg-info { background: var(--primary-gradient) !important; }
+.small-box.bg-success { background: var(--secondary-gradient) !important; }
+.small-box.bg-warning { background: var(--warning-gradient) !important; }
+.small-box.bg-danger { background: var(--danger-gradient) !important; }
+
+.small-box .inner h3 {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+/* Glassmorphism Cards */
+.card-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.card-title {
+    font-weight: 600;
+    color: #444;
+}
+
+/* Charts */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Tables */
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    border-top: 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.badge-pill {
+    padding: 0.4em 0.8em;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
