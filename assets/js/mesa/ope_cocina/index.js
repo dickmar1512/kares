@@ -195,7 +195,7 @@ function initPlugins() {
         $('#dataTables1').DataTable().destroy();
     }
 
-    $('#dataTables1').DataTable({
+    const dt = $('#dataTables1').DataTable({
         responsive:   true,
         lengthChange: true,
         autoWidth:    false,
@@ -225,6 +225,14 @@ function initPlugins() {
             }
         }
     });
+
+    /* ── Badge de conteo en el header de la card (kares-grid) ── */
+    const badgeTotal = document.getElementById('badge-total-filas');
+    if (badgeTotal) {
+        const updateBadge = () => { badgeTotal.textContent = dt.rows({ search: 'applied' }).count(); };
+        updateBadge();
+        dt.on('search.dt', updateBadge);
+    }
 }
 
 /* ════════════════════════════════════════════════════════════════════

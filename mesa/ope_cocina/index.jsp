@@ -83,6 +83,7 @@
     <link href="../../assets/plugins/fontawesome-free/css/all.min.css" rel="stylesheet" />  
     <link href="../../assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css" rel="stylesheet" />
     <link href="../../assets/plugins/adminlte3/css/adminlte.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../../assets/css/kares-grid.css">
     <link rel="stylesheet" href="../../assets/css/mesa/ope_cocina/index.css">
 </head>
 <body class="hold-transition layout-top-nav">
@@ -226,9 +227,14 @@
           </div>
 
           <!-- Tabla de pedidos -->
-          <div class="card table-card">
+          <div class="card card-kares">
+            <div class="card-header">
+              <i class="fas fa-list-alt"></i>
+              <span class="card-title">Registro de Pedidos</span>
+              <span class="badge-count" id="badge-total-filas">0</span>
+            </div>
             <div class="card-body p-0">    
-              <table id="dataTables1" class="table table-hover mb-0">      
+              <table id="dataTables1" class="table table-kares table-hover mb-0">      
                 <thead>
                   <tr>
                     <th>#</th>
@@ -302,14 +308,14 @@
                             if(minEst < 0 || minEst > 4) minEst = 0;
                 %> 
                 <tr>
-                  <td class="font-weight-bold text-muted"><%=orden%></td>
+                  <td class="code"><%=orden%></td>
                   <td><span class="text-dark"><%=rset.getString("fecha_mostrar")%></span></td>
-                  <td><span class="badge badge-light p-2"><%=rset.getString("pref").trim()%>-<%=rset.getString("numdoc").trim()%></span></td>
+                  <td><span class="badge-kares" style="background:#eef1f7;color:var(--kares-secondary);"><%=rset.getString("pref").trim()%>-<%=rset.getString("numdoc").trim()%></span></td>
                   <td><span class="font-weight-600"><%=rset.getString("nombre")%></span></td>
-                  <td><span class="badge badge-info px-3 py-2">Mesa <%=rset.getString("id_mesa")%></span></td>
+                  <td><span class="badge-kares" style="background:#dbeafe;color:#1e40af;">Mesa <%=rset.getString("id_mesa")%></span></td>
                   <td>
                     <button type="button" data-toggle="tooltip" title="Ver Detalle"
-                            class="btn btn-light btn-action text-info border-0"
+                            class="btn-kares btn-action"
                             onclick="verDetalle('<%=rset.getString("id_mov_vnt")%>', this, '<%=estadoVnt%>')">
                       <i class="fas fa-receipt"></i>
                     </button>
@@ -328,7 +334,7 @@
                   </td>
                   <td class="text-center">
                     <div class="d-flex align-items-center justify-content-center">
-                      <span class="badge-status <%=badgeClass%> mr-3"><%=estadoText%></span>
+                      <span class="badge-status <%=badgeClass%>"><%=estadoText%></span>
                     </div>
                   </td>
                 </tr>
