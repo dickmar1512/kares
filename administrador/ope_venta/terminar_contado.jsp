@@ -191,7 +191,7 @@
             cerrar(rset, pstmt, null);
 
             if (pend == 0) {
-                COMANDO = "UPDATE mesas SET estado = '0' WHERE idm = ?";
+                COMANDO = "UPDATE mesas SET estado = '0', cliente = NULL WHERE idm = ?";
                 pstmt = conn.prepareStatement(COMANDO);
                 pstmt.setString(1, s_idm);
                 int updatedRows = pstmt.executeUpdate();

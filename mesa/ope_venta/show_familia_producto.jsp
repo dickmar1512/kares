@@ -35,7 +35,7 @@
         </div>
 
         <!-- Tabs de categorías -->
-        <ul class="nav-tabs-compact" id="custom-tabs-menu" role="tablist">
+        <ul class="nav nav-tabs-compact" id="custom-tabs-menu" role="tablist">
             <%
                 int tabIndex = 0;
                 Connection connTabs = null;

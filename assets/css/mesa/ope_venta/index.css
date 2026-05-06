@@ -1,368 +1,244 @@
+/* ════════════════════════════════════════════════════════════════
+   index.css — Selección de Mesas (100vh Flex)
+   Kares ERP
+   ════════════════════════════════════════════════════════════════ */
+
 :root {
-      --success-color: #28a745;
-      --success-light: #d4edda;
-      --warning-color: #ffc107;
-      --warning-light: #fff3cd;
-      --danger-color: #dc3545;
-      --danger-light: #f8d7da;
-      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.2);
-      --border-radius: 12px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    --kc-success: #10b981;
+    --kc-success-light: #d1fae5;
+    --kc-warning: #f59e0b;
+    --kc-warning-light: #fef3c7;
+    --kc-danger:  #ef4444;
+    --kc-danger-light: #fee2e2;
+    --kc-bg:      #f0f2f7;
+    --kc-text:    #1e293b;
+    --kc-muted:   #64748b;
+}
 
-    body {
-      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-      min-height: 100vh;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+*, *::before, *::after { box-sizing: border-box; }
 
-    .wrapper {
-      padding: 0;
-    }
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', 'Source Sans Pro', sans-serif;
+    background: var(--kc-bg);
+    color: var(--kc-text);
+    overflow: hidden;
+}
 
-    /* Header moderno */
-    .content-header {
-      background: white;
-      border-radius: var(--border-radius);
-      margin: 20px;
-      padding: 25px;
-      box-shadow: var(--shadow);
-    }
+/* ── Contenedor principal ────────────────────────────────────── */
+.mesas-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
 
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 0;
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #2c3e50;
-    }
+/* ── Topbar corporativa ─────────────────────────────────────── */
+.mesas-topbar {
+    height: 42px;
+    background: #1a3c6e;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    z-index: 10;
+}
+.mesas-topbar .topbar-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,.15);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.mesas-topbar .topbar-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .3px;
+}
+.mesas-topbar .topbar-right {
+    margin-left: auto;
+    font-size: 11px;
+    color: rgba(255,255,255,.7);
+}
 
-    .page-title i {
-      font-size: 1.5rem;
-      color: #3498db;
-    }
+/* ── Contenido con Scroll ───────────────────────────────────── */
+.mesas-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #c8d0e0 transparent;
+}
+.mesas-content::-webkit-scrollbar { width: 6px; }
+.mesas-content::-webkit-scrollbar-track { background: transparent; }
+.mesas-content::-webkit-scrollbar-thumb { background: #c8d0e0; border-radius: 4px; }
 
-    .breadcrumb {
-      background: transparent;
-      padding: 0;
-      margin: 0;
-    }
+/* ── Grid de Mesas ──────────────────────────────────────────── */
+.mesas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
 
-    .breadcrumb-item a {
-      color: #3498db;
-      text-decoration: none;
-      transition: var(--transition);
-    }
+/* ── Tarjeta de Mesa ────────────────────────────────────────── */
+.mesa-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e4e8ef;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    box-shadow: 0 2px 4px rgba(0,0,0,.04);
+}
+.mesa-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,.08);
+}
 
-    .breadcrumb-item a:hover {
-      color: #2980b9;
-    }
+/* Acento superior de color según estado */
+.mesa-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+}
+.mesa-card.disponible::before { background: var(--kc-success); }
+.mesa-card.reservada::before  { background: var(--kc-warning); }
+.mesa-card.ocupada::before    { background: var(--kc-danger); }
 
-    /* Contenedor de mesas */
-    .mesas-container {
-      padding: 20px;
-    }
+/* Hover effects */
+.mesa-card.disponible:hover { border-color: #6ee7b7; }
+.mesa-card.reservada:hover  { border-color: #fcd34d; }
+.mesa-card.ocupada:hover    { border-color: #fca5a5; }
 
-    /* Tarjetas de mesa modernas */
-    .mesa-card {
-      background: white;
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: var(--transition);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      border: 2px solid transparent;
-    }
+/* Header de la tarjeta */
+.mesa-header {
+    padding: 16px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.mesa-nombre {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+}
+.mesa-icon {
+    font-size: 20px;
+    color: #cbd5e1;
+}
 
-    .mesa-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-hover);
-    }
+/* Cuerpo de la tarjeta */
+.mesa-body {
+    padding: 0 16px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-    /* Estados de las mesas */
-    .mesa-card.disponible {
-      border-color: var(--success-color);
-    }
+/* Info filas */
+.mesa-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: #64748b;
+}
+.mesa-info i {
+    width: 14px;
+    color: #94a3b8;
+    text-align: center;
+}
+.mesa-info strong {
+    color: #3d5170;
+    font-weight: 700;
+}
 
-    .mesa-card.disponible .mesa-header {
-      background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
-    }
+/* Badge de estado sutil */
+.estado-badge {
+    align-self: flex-start;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+.estado-badge i { font-size: 6px; }
 
-    .mesa-card.reservada {
-      border-color: var(--warning-color);
-    }
+.estado-badge.disponible { background: var(--kc-success-light); color: #065f46; }
+.estado-badge.reservada  { background: var(--kc-warning-light); color: #92400e; }
+.estado-badge.ocupada    { background: var(--kc-danger-light); color: #991b1b; }
 
-    .mesa-card.reservada .mesa-header {
-      background: linear-gradient(135deg, var(--warning-color) 0%, #ffb300 100%);
-    }
+/* Botón de acción integrado */
+.mesa-action {
+    margin-top: auto;
+    padding-top: 14px;
+}
+.btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
 
-    .mesa-card.ocupada {
-      border-color: var(--danger-color);
-    }
+.btn-action.disponible {
+    background: #f8fafc;
+    color: var(--kc-success);
+    border: 1px solid #e2e8f0;
+}
+.btn-action.disponible:hover { background: var(--kc-success); color: #fff; border-color: var(--kc-success); }
 
-    .mesa-card.ocupada .mesa-header {
-      background: linear-gradient(135deg, var(--danger-color) 0%, #e74c3c 100%);
-    }
+.btn-action.reservada {
+    background: #f8fafc;
+    color: #d97706;
+    border: 1px solid #e2e8f0;
+}
+.btn-action.reservada:hover { background: var(--kc-warning); color: #fff; border-color: var(--kc-warning); }
 
-    /* Header de la tarjeta */
-    .mesa-header {
-      padding: 25px 20px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
+.btn-action.ocupada {
+    background: #f8fafc;
+    color: var(--kc-danger);
+    border: 1px solid #e2e8f0;
+}
+.btn-action.ocupada:hover { background: var(--kc-danger); color: #fff; border-color: var(--kc-danger); }
 
-    .mesa-header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      animation: pulse 3s ease-in-out infinite;
-    }
+/* Animación de carga escalonada sutil */
+.mesa-card { animation: fadeUp .4s ease-out backwards; }
+.mesa-card:nth-child(1) { animation-delay: .05s; }
+.mesa-card:nth-child(2) { animation-delay: .10s; }
+.mesa-card:nth-child(3) { animation-delay: .15s; }
+.mesa-card:nth-child(4) { animation-delay: .20s; }
+.mesa-card:nth-child(n+5) { animation-delay: .25s; }
 
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-    .mesa-icon {
-      position: absolute;
-      right: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 3.5rem;
-      opacity: 0.3;
-    }
-
-    .mesa-nombre {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin: 0;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Cuerpo de la tarjeta */
-    .mesa-body {
-      padding: 20px;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .mesa-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #6c757d;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
-    }
-
-    .mesa-info i {
-      color: #3498db;
-      font-size: 1rem;
-    }
-
-    /* Badge de estado */
-    .estado-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-top: 10px;
-    }
-
-    .estado-badge.disponible {
-      background: var(--success-light);
-      color: var(--success-color);
-    }
-
-    .estado-badge.reservada {
-      background: var(--warning-light);
-      color: #856404;
-    }
-
-    .estado-badge.ocupada {
-      background: var(--danger-light);
-      color: var(--danger-color);
-    }
-
-    /* Botón de acción */
-    .mesa-action {
-      margin-top: auto;
-      padding-top: 15px;
-      border-top: 1px solid #e9ecef;
-    }
-
-    .btn-action {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: var(--transition);
-      cursor: pointer;
-    }
-
-    .btn-action.disponible {
-      background: var(--success-color);
-      color: white;
-    }
-
-    .btn-action.disponible:hover {
-      background: #218838;
-      transform: scale(1.02);
-    }
-
-    .btn-action.reservada {
-      background: var(--warning-color);
-      color: #856404;
-    }
-
-    .btn-action.reservada:hover {
-      background: #e0a800;
-      transform: scale(1.02);
-    }
-
-    .btn-action.ocupada {
-      background: var(--danger-color);
-      color: white;
-    }
-
-    .btn-action.ocupada:hover {
-      background: #c82333;
-      transform: scale(1.02);
-    }
-
-    /* Grid responsive */
-    .mesas-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-    }
-
-    /* Animación de entrada */
-    .mesa-card {
-      animation: fadeInUp 0.5s ease-out backwards;
-    }
-
-    .mesa-card:nth-child(1) { animation-delay: 0.1s; }
-    .mesa-card:nth-child(2) { animation-delay: 0.2s; }
-    .mesa-card:nth-child(3) { animation-delay: 0.3s; }
-    .mesa-card:nth-child(4) { animation-delay: 0.4s; }
-    .mesa-card:nth-child(n+5) { animation-delay: 0.5s; }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .content-header {
-        margin: 10px;
-        padding: 15px;
-      }
-
-      .page-title {
-        font-size: 1.4rem;
-      }
-
-      .breadcrumb {
-        font-size: 0.85rem;
-      }
-
-      .mesas-container {
-        padding: 10px;
-      }
-
-      .mesas-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 15px;
-      }
-
-      .mesa-nombre {
-        font-size: 1.5rem;
-      }
-    }
-
-    @media (max-width: 576px) {
-      .mesas-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .row.mb-2 {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .col-sm-6 {
-        text-align: center !important;
-      }
-
-      .breadcrumb {
-        justify-content: center;
-      }
-    }
-
-    /* Indicador de carga */
-    .loading-indicator {
-      text-align: center;
-      padding: 40px;
-      color: #6c757d;
-    }
-
-    .loading-indicator i {
-      font-size: 3rem;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    /* Efecto ripple */
-    .btn-action {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .ripple {
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.6);
-        transform: scale(0);
-        animation: ripple-animation 0.6s ease-out;
-        pointer-events: none;
-    }
-
-    @keyframes ripple-animation {
-        to {
-        transform: scale(4);
-        opacity: 0;
-        }
-    }
+@media (max-width: 768px) {
+    .mesas-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}

@@ -65,7 +65,7 @@
            }
                     
            try{
-                COMANDO2 = "update mesas set estado ='0' where idm=?";
+                COMANDO2 = "update mesas set estado ='0', cliente = NULL where idm=?";
                 conn2 = getConexion();
                 pstmt2 = conn2.prepareStatement(COMANDO2);
                 pstmt2.setString(1, s_idm);

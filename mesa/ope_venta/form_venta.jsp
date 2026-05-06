@@ -218,7 +218,7 @@
                         <thead>
                             <tr>
                                 <th style="width:24px">#</th>
-                                <th>Fecha</th>
+                                <th style="width:100px">Fecha</th>
                                 <th style="width:60px">Orden</th>
                                 <th style="width:40px;text-align:center">Cant</th>
                                 <th>Descripción</th>
