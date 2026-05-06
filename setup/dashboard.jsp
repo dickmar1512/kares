@@ -128,7 +128,7 @@
     <!-- Brand Logo -->
     <a href="main.jsp" class="brand-link bg-lila" target="view">
       <img src="../assets/images/logoEmpresa.png" alt="Logo empresa" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-bold">Administrador</span>
+      <span class="brand-text font-weight-bold">Setup</span>
     </a>
 
     <!-- Sidebar -->

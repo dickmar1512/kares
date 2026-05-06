@@ -1,6 +1,6 @@
 <%@ include file="../config/database.jsp"%>
 <html>
-<title>..::Administrador::..</title>
+<title>..::Setup KARES::..</title>
 <%
     /* ═══════════════════════════════════════════════════════
        VARIABLES INICIALES
