@@ -1,159 +1,164 @@
-function calcular(i) {   
-    document.datos.f_suma.value = suma();
-    document.datos.f_monto.value = suma();
+/* ════════════════════════════════════════════════════════════════
+   form_venta.js — Panel de carrito + órdenes
+   Kares ERP
+   ════════════════════════════════════════════════════════════════ */
+
+'use strict';
+
+/* ── Calcular suma cuando cambia precio ─────────────────────── */
+function calcular(i) {
+    var s = suma();
+    var sumaInput = document.querySelector('input[name="f_suma"]');
+    if (sumaInput) sumaInput.value = s;
+    actualizarFooterTotal(s);
 }
 
-function suma() {   
+function suma() {
     var valor = 0;
     var num = Number(document.datos.cont_items.value);
-    
-    for(i=1; i<=num; i++) {  
-        var cambiar = eval("document.datos.f_cambia_precio_"+i+".value");  
-        var temp = "0";
-        
-        if (cambiar == '3') {   
-            temp = eval("document.datos.f_total_nuevo_"+i+".value");    
+    for (var idx = 1; idx <= num; idx++) {
+        var cambiar = document.datos['f_cambia_precio_' + idx]
+            ? document.datos['f_cambia_precio_' + idx].value : '0';
+        var temp = '0';
+        if (cambiar === '3') {
+            temp = document.datos['f_total_nuevo_' + idx]
+                ? document.datos['f_total_nuevo_' + idx].value : '0';
         } else {
-            temp = eval("document.datos.f_total_"+i+".value");             
+            temp = document.datos['f_total_' + idx]
+                ? document.datos['f_total_' + idx].value : '0';
         }
-        
-        if (isNaN(parseFloat(temp))) { temp = 0; }
+        if (isNaN(parseFloat(temp))) temp = 0;
         valor = parseFloat(valor) + parseFloat(temp);
     }
     return valor.toFixed(2);
 }
 
-function actualizarTotalVenta() {
-    // Recargar el contenido del iframe de ventas
-    var iframe = document.getElementById('venta');
-    if(iframe && iframe.contentWindow) {
-        iframe.contentWindow.location.reload();
-    }
+/* ── Sincronizar valor en footer ────────────────────────────── */
+function actualizarFooterTotal(val) {
+    var el = document.getElementById('footer-total-val');
+    if (el) el.textContent = parseFloat(val).toFixed(2);
 }
 
+/* ── Generar orden ──────────────────────────────────────────── */
 function generarOrden() {
-    const btn = document.getElementById('btn-generar-orden');
+    var btn = document.getElementById('btn-generar-orden');
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
     }
-    
-    // Mostrar overlay de carga
-    const loader = document.getElementById('loader-overlay');
+    var loader = document.getElementById('loader-overlay');
     if (loader) loader.style.display = 'flex';
-    
+
     document.datos.action = 'nueva_orden.jsp';
     document.datos.submit();
-}        
+}
 
+/* ── Recalcular totales tras eliminar fila ──────────────────── */
 function recalcularTotales() {
-    let total = 0;
-    let count = 0;
-    const rows = document.querySelectorAll('#detalle-items tr');
-    
-    rows.forEach((row, index) => {
+    var total = 0;
+    var count = 0;
+    var rows  = document.querySelectorAll('#detalle-items tr');
+
+    rows.forEach(function (row) {
         count++;
-        const newIndex = count;
-        
-        // Actualizar el número de badge en la primera celda
-        const badge = row.querySelector('.badge-secondary');
-        if (badge) badge.textContent = newIndex;
-        
-        // Re-indexar todos los inputs de la fila
-        const inputs = row.querySelectorAll('input');
-        inputs.forEach(input => {
-            const oldName = input.name;
+        /* Actualizar badge de número */
+        var badge = row.querySelector('.item-num');
+        if (badge) badge.textContent = count;
+
+        /* Re-indexar inputs */
+        row.querySelectorAll('input').forEach(function (input) {
+            var oldName = input.name;
             if (oldName && oldName.includes('_')) {
-                const parts = oldName.split('_');
-                // El índice suele ser el último segmento (ej: f_total_1)
-                // Pero hay nombres como f_total_nuevo_1
-                const nameBase = oldName.substring(0, oldName.lastIndexOf('_'));
-                input.name = nameBase + '_' + newIndex;
+                var base = oldName.substring(0, oldName.lastIndexOf('_'));
+                input.name = base + '_' + count;
             }
         });
-        
-        // Obtener el total de la fila para la suma
-        const totalInput = row.querySelector(`input[name="f_total_${newIndex}"]`);
-        const estadoInput = row.querySelector(`input[name="f_estado_det_${newIndex}"]`);
-        
+
+        /* Sumar totales activos */
+        var estadoInput = row.querySelector('input[name="f_estado_det_' + count + '"]');
+        var totalInput  = row.querySelector('input[name="f_total_' + count + '"]');
         if (estadoInput && estadoInput.value === 'P' && totalInput) {
-            total += parseFloat(totalInput.value);
+            total += parseFloat(totalInput.value) || 0;
         }
     });
 
-    // Actualizar total items
-    const totalItemsBadge = document.querySelector('.total-row .badge-info');
-    if (totalItemsBadge) totalItemsBadge.textContent = count;
+    /* Actualizar badge header */
+    var badge = document.getElementById('badge-items');
+    if (badge) badge.textContent = count + ' ítem' + (count !== 1 ? 's' : '');
 
-    // Actualizar suma total
-    const sumaInput = document.querySelector('input[name="f_suma"]');
+    /* Actualizar label de items en tfoot */
+    var lblItems = document.getElementById('lbl-total-items');
+    if (lblItems) lblItems.textContent = count;
+
+    /* Actualizar conteo global */
+    var contInput = document.querySelector('input[name="cont_items"]');
+    if (contInput) contInput.value = count;
+
+    /* Actualizar total */
+    var sumaInput = document.querySelector('input[name="f_suma"]');
     if (sumaInput) {
         sumaInput.value = total.toFixed(2);
     } else {
-        const totalText = document.querySelector('.total-row .text-primary');
-        if (totalText) totalText.textContent = total.toFixed(2);
+        var lblSuma = document.getElementById('lbl-suma');
+        if (lblSuma) lblSuma.textContent = total.toFixed(2);
     }
-    
-    // Actualizar contador global
-    const contItemsInput = document.querySelector('input[name="cont_items"]');
-    if (contItemsInput) contItemsInput.value = count;
+
+    actualizarFooterTotal(total.toFixed(2));
+
+    /* Si no quedan ítems → ocultar footer sticky */
+    if (count === 0) {
+        var footerBar = document.getElementById('carrito-footer-bar');
+        if (footerBar) footerBar.style.display = 'none';
+    }
 }
 
+/* ── Eliminar ítem ──────────────────────────────────────────── */
 async function eliminarItem(id_movart, rowId) {
-    const result = await Swal.fire({
-        title: '¿Estás seguro?',
-        text: "Se eliminará este item de la orden.",
+    var result = await Swal.fire({
+        title: '¿Eliminar este ítem?',
+        text: 'Se quitará del carrito de la orden.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: '#991b1b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fas fa-trash-alt"></i> Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'swal2-sm' }
     });
 
     if (!result.isConfirmed) return;
 
-    const row = document.getElementById(rowId);
-    row.style.opacity = '0.5';
+    var row = document.getElementById(rowId);
+    if (!row) return;
+    row.style.opacity = '0.4';
     row.style.pointerEvents = 'none';
-    
+
     try {
-        const response = await fetch('eliminar_ajax.jsp?f_id_movart='+id_movart);
-        const data = await response.json();
+        var response = await fetch('eliminar_ajax.jsp?f_id_movart=' + id_movart);
+        var data = await response.json();
 
         if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Eliminado',
-                text: data.message,
-                timer: 1500,
-                showConfirmButton: false
-            });
+            Swal.mixin({
+                toast: true, position: 'top-end',
+                showConfirmButton: false,
+                timer: 1400, timerProgressBar: true
+            }).fire({ icon: 'success', title: 'Ítem eliminado' });
 
-            // Animación de desvanecimiento y eliminación
-            row.style.transition = 'all 0.5s ease';
-            row.style.transform = 'translateX(20px)';
-            row.style.opacity = '0';
-            
-            setTimeout(() => {
+            row.style.transition = 'all .35s ease';
+            row.style.transform  = 'translateX(16px)';
+            row.style.opacity    = '0';
+            setTimeout(function () {
                 row.remove();
                 recalcularTotales();
-                
-                // Si no quedan items, ocultar botón de Nueva Orden
-                const remainingRows = document.querySelectorAll('#detalle-items tr');
-                if (remainingRows.length === 0) {
-                    const footer = document.querySelector('.card-footer');
-                    if (footer) footer.style.display = 'none';
-                }
-            }, 500);
+            }, 360);
         } else {
             Swal.fire('Error', data.message, 'error');
             row.style.opacity = '1';
             row.style.pointerEvents = 'auto';
         }
-    } catch (error) {
-        console.error('Error al eliminar:', error);
-        Swal.fire('Error', 'Error de conexión al eliminar el item.', 'error');
+    } catch (err) {
+        console.error('eliminarItem error:', err);
+        Swal.fire('Error', 'Error de conexión al eliminar el ítem.', 'error');
         row.style.opacity = '1';
         row.style.pointerEvents = 'auto';
     }

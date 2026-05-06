@@ -1,115 +1,164 @@
+/* ════════════════════════════════════════════════════════════════
+   show_familia_producto.js
+   Catálogo de productos — Kares ERP
+   ════════════════════════════════════════════════════════════════ */
+
+'use strict';
+
 $(document).ready(function () {
-	// Guardar tab activo en localStorage
-	$('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
-		localStorage.setItem('activeMenuTab', $(e.target).attr('href'));
-	});
 
-	// Restaurar tab activo
-	var activeTab = localStorage.getItem('activeMenuTab');
-	if (activeTab) {
-		$('#custom-tabs-menu a[href="' + activeTab + '"]').tab('show');
-	}
+    /* ── Variables del buscador — declaradas PRIMERO ────────────
+       Deben estar antes de cualquier listener que llame a
+       filterProducts(), para evitar que queden en undefined
+       cuando el tab restaurado dispare shown.bs.tab.        */
+    var $search     = $('#product-search');
+    var $countLabel = $('#search-count');
 
-	// Manejar agregar producto vía AJAX
-	$('.btn-add-producto').on('click', function (e) {
-		e.preventDefault();
+    /* ── Función de filtrado ─────────────────────────────────── */
+    function filterProducts() {
+        /* Leer directamente del DOM como fallback de seguridad contra hoisting */
+        var $s   = (typeof $search !== 'undefined' && $search && $search.length) ? $search : $('#product-search');
+        var term = ($s && $s.length) ? $s.val().trim().toLowerCase() : '';
 
-		var $btn = $(this);
-		var idServicio = $btn.data('id-servicio');
-		var $productBox = $btn.closest('.product-box');
-		var cantidad = $productBox.find('.cantidad-input').val();
+        var visible = 0;
+        var total   = 0;
 
-		// Deshabilitar botón mientras se procesa
-		$btn.prop('disabled', true);
-		$btn.html('<i class="fas fa-spinner fa-spin"></i> Agregando...');
+        /* Solo operar sobre el tab activo */
+        var $activePane = $('.tab-pane.show.active');
+        if (!$activePane.length) $activePane = $('.tab-pane.active');
 
-		// Mostrar loading en el botón
-		$.ajax({
-			url: 'add_venta_ajax.jsp',
-			type: 'POST',
-			data: {
-				f_id_servicio: idServicio,
-				f_cantidad: cantidad,
-				modo_venta: 2
-			},
-			dataType: 'json',
-			success: function (response) {
-				if (response.success) {
-					// Mostrar notificación de éxito
-					showNotification('success', 'Producto agregado',
-						'Se agregó ' + cantidad + ' unidad(es) correctamente');
+        $activePane.find('.product-box').each(function () {
+            var name = $(this).find('h5').text().toLowerCase();
+            total++;
+            if (!term || name.includes(term)) {
+                $(this).removeClass('hidden');
+                visible++;
+            } else {
+                $(this).addClass('hidden');
+            }
+        });
 
-					// Animar el producto agregado
-					$productBox.addClass('product-added');
-					setTimeout(function () {
-						$productBox.removeClass('product-added');
-					}, 500);
+        var $lbl = (typeof $countLabel !== 'undefined' && $countLabel && $countLabel.length) ? $countLabel : $('#search-count');
+        if ($lbl && $lbl.length) {
+            $lbl.text(term ? (visible + '/' + total) : '');
+        }
+    }
 
-					// Actualizar contador o total en el iframe padre si existe
-					if (window.parent && window.parent.actualizarTotalVenta) {
-						window.parent.actualizarTotalVenta();
-					}
+    /* ── 1. Persistir / restaurar tab activo ────────────────── */
+    $('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
+        localStorage.setItem('activeMenuTab', $(e.target).attr('href'));
+        filterProducts();
+    });
 
-					// Limpiar cantidad a 1 después de agregar (opcional)
-					$productBox.find('.cantidad-input').val('1');
-				} else {
-					showNotification('error', 'Error', response.message);
-				}
-			},
-			error: function (xhr, status, error) {
-				showNotification('error', 'Error de conexión',
-					'No se pudo agregar el producto: ' + error);
-				console.error('Error:', error);
-				console.error('Response:', xhr.responseText);
-			},
-			complete: function () {
-				// Restaurar botón
-				$btn.prop('disabled', false);
-				$btn.html('<i class="fas fa-plus-circle"></i> Agregar');
-			}
-		});
-	});
+    /* Limpiar búsqueda al iniciar cambio de tab */
+    $('a[data-toggle="pill"]').on('show.bs.tab', function () {
+        $search.val('');
+        $countLabel.text('');
+    });
 
-	// Permitir agregar con Enter en el input de cantidad
-	$('.cantidad-input').on('keypress', function (e) {
-		if (e.which === 13) { // Enter key
-			e.preventDefault();
-			$(this).closest('.product-box').find('.btn-add-producto').click();
-		}
-	});
+    var savedTab = localStorage.getItem('activeMenuTab');
+    if (savedTab) {
+        var $savedLink = $('#custom-tabs-menu a[href="' + savedTab + '"]');
+        if ($savedLink.length) $savedLink.tab('show');
+    }
 
-	// Función para mostrar notificaciones
-	function showNotification(type, title, message) {
-		// Crear elemento de notificación si no existe
-		if ($('#custom-notification').length === 0) {
-			$('body').append('<div id="custom-notification" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
-		}
+    /* ── 2. Botones +/− de cantidad ─────────────────────────── */
+    $(document).on('click', '.qty-plus', function () {
+        var $input = $(this).closest('.qty-wrapper').find('.qty-input');
+        var val = parseInt($input.val()) || 1;
+        $input.val(Math.min(val + 1, 99));
+    });
 
-		var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-		var bgColor = type === 'success' ? '#28a745' : '#dc3545';
+    $(document).on('click', '.qty-minus', function () {
+        var $input = $(this).closest('.qty-wrapper').find('.qty-input');
+        var val = parseInt($input.val()) || 1;
+        $input.val(Math.max(val - 1, 1));
+    });
 
-		var notification = $('<div>', {
-			class: 'alert alert-' + type,
-			style: 'background-color: ' + bgColor + '; color: white; margin-bottom: 10px; padding: 15px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); min-width: 250px;'
-		}).html('<i class="fas ' + icon + '"></i> <strong>' + title + '</strong><br>' + message);
+    /* Seleccionar todo al hacer focus en el input de cantidad */
+    $(document).on('focus', '.qty-input', function () {
+        $(this).select();
+    });
 
-		$('#custom-notification').append(notification);
+    /* ── 3. Agregar producto vía AJAX ───────────────────────── */
+    $(document).on('click', '.btn-add-producto', function (e) {
+        e.preventDefault();
 
-		// Auto-cerrar después de 3 segundos
-		setTimeout(function () {
-			notification.fadeOut(500, function () {
-				$(this).remove();
-			});
-		}, 3000);
-	}
+        var $btn       = $(this);
+        var idServicio = $btn.data('id-servicio');
+        var $box       = $btn.closest('.product-box');
+        var cantidad   = parseInt($box.find('.qty-input').val()) || 1;
+
+        if (cantidad < 1 || cantidad > 99) {
+            showToast('error', 'Cantidad inválida (1-99)');
+            return;
+        }
+
+        $btn.prop('disabled', true);
+        $btn.html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url:      'add_venta_ajax.jsp',
+            type:     'POST',
+            data:     { f_id_servicio: idServicio, f_cantidad: cantidad, modo_venta: 2 },
+            dataType: 'json',
+            success: function (res) {
+                if (res.success) {
+                    showToast('success', cantidad + ' × ' + $box.find('h5').text().trim() + ' agregado');
+
+                    /* Animación flash */
+                    $box.addClass('product-added');
+                    setTimeout(function () { $box.removeClass('product-added'); }, 450);
+
+                    /* Resetear cantidad */
+                    $box.find('.qty-input').val('1');
+
+                    /* Notificar al shell padre para recargar iframe de venta */
+                    if (window.parent && typeof window.parent.actualizarTotalVenta === 'function') {
+                        window.parent.actualizarTotalVenta();
+                    }
+                } else {
+                    showToast('error', res.message || 'No se pudo agregar');
+                }
+            },
+            error: function (xhr) {
+                showToast('error', 'Error de conexión');
+                console.error('AJAX error:', xhr.responseText);
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+                $btn.html('<i class="fas fa-cart-plus"></i> Agregar');
+            }
+        });
+    });
+
+    /* Agregar con Enter en input de cantidad */
+    $(document).on('keypress', '.qty-input', function (e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $(this).closest('.product-box').find('.btn-add-producto').trigger('click');
+        }
+    });
+
+    /* ── 4. Listener del buscador ────────────────────────────── */
+    $search.on('input', filterProducts);
+
+    /* ── 5. Toast nativo ────────────────────────────────────── */
+    window.showToast = function (type, msg) {
+        var $container = $('#catalog-toast');
+        var icon = type === 'success'
+            ? '<i class="fas fa-check-circle"></i>'
+            : '<i class="fas fa-exclamation-triangle"></i>';
+
+        var $item = $('<div>')
+            .addClass('toast-item toast-' + type)
+            .html(icon + ' ' + msg);
+
+        $container.append($item);
+
+        setTimeout(function () {
+            $item.fadeOut(300, function () { $(this).remove(); });
+        }, 2800);
+    };
+
 });
-
-// Función global para refrescar el contenedor de productos (opcional)
-function actualizarProductos() {
-	// Recargar solo los tabs que tienen productos
-	$('#custom-tabs-menu a[data-toggle="pill"]').each(function () {
-		var $tab = $(this);
-		var href = $tab.attr('href');
-		// Aquí podrías recargar el contenido del tab si es necesario
-	});
-}
