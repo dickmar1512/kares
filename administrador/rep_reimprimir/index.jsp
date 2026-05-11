@@ -37,6 +37,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Reimpresión de Comprobantes</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- AdminLTE 3 + Bootstrap 4 -->
     <link rel="stylesheet" href="../../assets/plugins/adminlte3/css/adminlte.min.css">
     <link rel="stylesheet" href="../../assets/css/kares-grid.css">
@@ -217,7 +218,7 @@
                     <i class="fas fa-times mr-1"></i>Cerrar
                 </button>
                 <button type="button" class="btn btn-sm btn-warning" onclick="downloadPDF()">
-                    <i class="fas fa-download mr-1"></i>Descargar
+                    <i class="fas fa-download me-2"></i>Descargar
                 </button>
                 <button type="button" class="btn btn-sm btn-corporate" onclick="printPDF()">
                     <i class="fas fa-print mr-1"></i>Imprimir
@@ -230,7 +231,7 @@
 <!-- jQuery + Bootstrap 4 + AdminLTE -->
 <script src="../../assets/plugins/jquery/jquery.min.js"></script>
 <script src="../../assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="../../assets/plugins/adminlte3/js/adminlte.min.js"></script>
+<%-- <script src="../../assets/plugins/adminlte3/js/adminlte.min.js"></script> --%>
 <script src="../../assets/js/administrador/rep_reimprimir/index.js"></script>
 </body>
 </html>

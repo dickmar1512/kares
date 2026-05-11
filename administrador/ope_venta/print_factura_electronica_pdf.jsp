@@ -13,6 +13,7 @@
 <%@ page import="com.itextpdf.layout.property.TextAlignment" %>
 <%@ page import="com.itextpdf.layout.property.HorizontalAlignment" %>
 <%@ page import="com.itextpdf.layout.borders.SolidBorder" %>
+<%@ page import="com.itextpdf.layout.borders.Border" %>
 <%@ page import="com.itextpdf.barcodes.BarcodeQRCode" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
@@ -139,29 +140,36 @@
 
             // Datos del cliente - FACTURA
             document.add(new Paragraph(" "));
-            document.add(new Paragraph("FECHA EMISION: " + x_fec)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("RAZON SOCIAL  : " + s_razon)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.8f).setMarginBottom(2));
-            document.add(new Paragraph("RUC                      : " + p_ruc)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("DIRECCION        : " + p_dirruc)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("FORMA DE PAGO: " + p_formaPago)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
+            // Datos del cliente en tabla para evitar solapamientos y mejorar alineación
+            float[] colWidths = {75, 145};
+            Table clientTable = new Table(colWidths);
+            clientTable.setMarginTop(5);
+            
+            clientTable.addCell(new Cell().add(new Paragraph("FECHA EMISION :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(x_fec).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("RAZON SOCIAL  :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_razon).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("RUC                     :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(p_ruc).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("DIRECCION         :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(p_dirruc).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("FORMA PAGO     :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(p_formaPago).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            document.add(clientTable);
+            document.add(new Paragraph(" "));
             document.add(new Paragraph(" "));
 
             // Crear tabla para el detalle de productos
-            float[] columnWidthsProd = {30, 120, 30, 30};
+            float[] columnWidthsProd = {25, 145, 25, 25};
             Table tableProd = new Table(columnWidthsProd);
 
             // Encabezados de la tabla
-            Cell txtCantidad = new Cell().add(new Paragraph("Cant.")
+            Cell txtCantidad = new Cell().add(new Paragraph("Cnt.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(2));
@@ -175,14 +183,14 @@
             txtDescripcion.setBackgroundColor(new DeviceRgb(0, 0, 0));
             tableProd.addCell(txtDescripcion);
 
-            Cell txtImporte = new Cell().add(new Paragraph("P.Unit.")
+            Cell txtImporte = new Cell().add(new Paragraph("P.U.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(2));
             txtImporte.setBackgroundColor(new DeviceRgb(0, 0, 0));
             tableProd.addCell(txtImporte);
 
-            Cell txtSubtotal = new Cell().add(new Paragraph("Impo.")
+            Cell txtSubtotal = new Cell().add(new Paragraph("Imp.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(2));
@@ -211,13 +219,13 @@
                 double subtotal = rset2.getDouble("tota");
 
                 tableProd.addCell(new Cell().add(new Paragraph(String.valueOf(cantidad))
-                        .setFontSize(8).setTextAlignment(TextAlignment.CENTER)));
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.CENTER)));
                 tableProd.addCell(new Cell().add(new Paragraph(producto)
-                        .setFontSize(8)));
+                        .setFontSize(8).setBold()));
                 tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", precio))
-                        .setFontSize(8).setTextAlignment(TextAlignment.RIGHT)));
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.RIGHT)));
                 tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", subtotal))
-                        .setFontSize(8).setTextAlignment(TextAlignment.RIGHT)));
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.RIGHT)));
             }
             rset2.close();
 

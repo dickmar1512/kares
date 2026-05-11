@@ -1,8 +1,8 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%> 
 <%@ page import="java.io.*" %>
-<script src="../../plugins/jquery/jquery.min.js"></script>
-<script src="../../plugins/jquery/jquery.qrcode.js"></script>
-<script src="../../plugins/jquery/qrcode.js"></script>
+<script src="../../assets/plugins/jquery/jquery.min.js"></script>
+<script src="../../assets/plugins/jquery/jquery.qrcode.js"></script>
+<script src="../../assets/plugins/jquery/qrcode.js"></script>
 <%	
     int z;
     //String s_id_mov_vnt = request.getParameter("f_id_mov_vnt");

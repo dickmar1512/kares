@@ -13,6 +13,7 @@
 <%@ page import="com.itextpdf.layout.property.TextAlignment" %>
 <%@ page import="com.itextpdf.layout.property.HorizontalAlignment" %>
 <%@ page import="com.itextpdf.layout.borders.SolidBorder" %>
+<%@ page import="com.itextpdf.layout.borders.Border" %>
 <%@ page import="com.itextpdf.barcodes.BarcodeQRCode" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
@@ -40,12 +41,12 @@
     String p_formaPago = "CONTADO";
 
     // Ruta de la imagen del logo
-    String imagePath = application.getRealPath("/assets/images/logo2.png");
+    //String imagePath = application.getRealPath("/assets/images/logo.png");
+    String imagePath = application.getRealPath("/assets/images/logo2.png");    
 
     try {
-
         // Consultar la venta principal
-        COMANDO  = "select id_mov_vnt, " +
+        COMANDO = "select id_mov_vnt, " +
                   "upper(razon) razon, " +
                   "ruc, " +
                   "direcruc(ruc) dirruc, " +
@@ -59,9 +60,9 @@
                   "total " +
                   "from vent_registro " +
                   "where id_mov_vnt ='" + f_id_mov_vnt + "'";
-        conn = getConexion();
-        pstmt = conn.prepareStatement(COMANDO);
-        rset = pstmt.executeQuery();
+        conn = getConexion(); 
+        pstmt = conn.prepareStatement(COMANDO);  
+        rset = pstmt.executeQuery(); 
 
         if (rset.next()) {
             sumbi = rset.getDouble("bi");
@@ -139,29 +140,36 @@
 
             // Datos del cliente - FACTURA
             document.add(new Paragraph(" "));
-            document.add(new Paragraph("FECHA EMISION: " + x_fec)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("RAZON SOCIAL  : " + s_razon)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.8f).setMarginBottom(2));
-            document.add(new Paragraph("RUC                      : " + p_ruc)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("DIRECCION        : " + p_dirruc)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("FORMA DE PAGO: " + p_formaPago)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
+            // Datos del cliente en tabla para evitar solapamientos y mejorar alineación
+            float[] colWidths = {75, 145};
+            Table clientTable = new Table(colWidths);
+            clientTable.setMarginTop(5);
+            
+            clientTable.addCell(new Cell().add(new Paragraph("FECHA EMISION :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(x_fec).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("RAZON SOCIAL  :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_razon).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("RUC                     :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(p_ruc).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("DIRECCION         :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(p_dirruc).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("FORMA PAGO     :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(p_formaPago).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            document.add(clientTable);
+            document.add(new Paragraph(" "));
             document.add(new Paragraph(" "));
 
             // Crear tabla para el detalle de productos
-            float[] columnWidthsProd = {30, 120, 30, 30};
+            float[] columnWidthsProd = {25, 145, 25, 25};
             Table tableProd = new Table(columnWidthsProd);
 
             // Encabezados de la tabla
-            Cell txtCantidad = new Cell().add(new Paragraph("Cant.")
+            Cell txtCantidad = new Cell().add(new Paragraph("Cnt.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(2));
@@ -175,14 +183,14 @@
             txtDescripcion.setBackgroundColor(new DeviceRgb(0, 0, 0));
             tableProd.addCell(txtDescripcion);
 
-            Cell txtImporte = new Cell().add(new Paragraph("P.Unit.")
+            Cell txtImporte = new Cell().add(new Paragraph("P.U.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(2));
             txtImporte.setBackgroundColor(new DeviceRgb(0, 0, 0));
             tableProd.addCell(txtImporte);
 
-            Cell txtSubtotal = new Cell().add(new Paragraph("Impo.")
+            Cell txtSubtotal = new Cell().add(new Paragraph("Imp.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(2));
@@ -190,59 +198,50 @@
             tableProd.addCell(txtSubtotal);
 
             // Consultar el detalle de la venta
-            try {
-                COMANDO2 = "Select " +
-                        "cantidad, " +
-                        "glosa, ifnull(presentacion(id_articulo),'') presen, " +
-                        "round(valor_venta*((100+porc_igv)/100),2) as vv, " +
-                        "round((valor_venta*((100+porc_igv)/100))/cantidad,2) as vu, " +
-                        "round(base_imp*((100+porc_igv)/100),2) as bi, " +
-                        "round(ifnull(descuento,0)*((100+porc_igv)/100),2) as dsc, " +
-                        "round(total,2) as tota " +
-                        "from vent_regdet " +
-                        "where id_mov_vnt = '" + id_mov_vnt_value + "' " +
-                        "order by orden ";            
-                conn2 = getConexion();
-                pstmt2 = conn2.prepareStatement(COMANDO2);   
-                rset2 = pstmt2.executeQuery();
-                while (rset2.next()) {
-                        int cantidad = rset2.getInt("cantidad");
-                        String producto = rset2.getString("glosa");
-                        double precio = rset2.getDouble("vu");
-                        double subtotal = rset2.getDouble("tota");
+            COMANDO2 = "Select " +
+                      "cantidad, " +
+                      "glosa, ifnull(presentacion(id_articulo),'') presen, " +
+                      "round(valor_venta*((100+porc_igv)/100),2) as vv, " +
+                      "round((valor_venta*((100+porc_igv)/100))/cantidad,2) as vu, " +
+                      "round(base_imp*((100+porc_igv)/100),2) as bi, " +
+                      "round(ifnull(descuento,0)*((100+porc_igv)/100),2) as dsc, " +
+                      "round(total,2) as tota " +
+                      "from vent_regdet " +
+                      "where id_mov_vnt = '" + id_mov_vnt_value + "' " +
+                      "order by orden ";
+            conn2 = getConexion(); 
+            pstmt2 = conn2.prepareStatement(COMANDO2);  
+            rset2 = pstmt2.executeQuery(); 
+            while (rset2.next()) {
+                int cantidad = rset2.getInt("cantidad");
+                String producto = rset2.getString("glosa");
+                double precio = rset2.getDouble("vu");
+                double subtotal = rset2.getDouble("tota");
 
-                        tableProd.addCell(new Cell().add(new Paragraph(String.valueOf(cantidad))
-                                .setFontSize(8).setTextAlignment(TextAlignment.CENTER)));
-                        tableProd.addCell(new Cell().add(new Paragraph(producto)
-                                .setFontSize(8)));
-                        tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", precio))
-                                .setFontSize(8).setTextAlignment(TextAlignment.RIGHT)));
-                        tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", subtotal))
-                                .setFontSize(8).setTextAlignment(TextAlignment.RIGHT)));
-                }
-            } catch (Exception e) {
-                out.println(e.getMessage());
-            } finally {
-                cerrar(rset2,pstmt2,conn2);
+                tableProd.addCell(new Cell().add(new Paragraph(String.valueOf(cantidad))
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.CENTER)));
+                tableProd.addCell(new Cell().add(new Paragraph(producto)
+                        .setFontSize(8).setBold()));
+                tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", precio))
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.RIGHT)));
+                tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", subtotal))
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.RIGHT)));
             }
+            rset2.close();
 
             // Añadir la tabla de productos al documento
             document.add(tableProd);
 
             // Obtener total en letras
-            try {
-                COMANDO2 = "Select numtxt('" + sumtot + "') tota_letra from dual ";
-                conn2 = getConexion();
-                pstmt2 = conn2.prepareStatement(COMANDO2);
-                rset2 = pstmt2.executeQuery();
-                if (rset2.next()) {
-                    total_letras = "Son: " + rset2.getString("tota_letra") + " Soles.";
-                }
-            } catch (Exception e) {
-                out.println(e.getMessage());
-            } finally {
-                cerrar(rset2,pstmt2,conn2);
+            COMANDO3 = "Select numtxt('" + sumtot + "') tota_letra from dual ";
+            conn3 = getConexion();
+            pstmt3 = conn3.prepareStatement(COMANDO3);
+            rset3 = pstmt3.executeQuery();
+            if (rset3.next()) {
+                total_letras = "Son: " + rset3.getString("tota_letra") + " Soles.";
             }
+           
+           cerrar(rset3, pstmt3, conn3);
 
             // Generar código QR - Factura usa código 01
             String qrText = "20541177281|01|" + comprobante + "|0.00|" + sumtot + "|" + x_fec + "|";
@@ -318,16 +317,12 @@
         }
 
         // Cerrar conexiones
-        if (rsetLocal != null) rsetLocal.close();
-        if (stmtLocal != null) stmtLocal.close();
-        if (rset2Local != null) rset2Local.close();
-        if (stmt2Local != null) stmt2Local.close();
+        cerrar(rset, pstmt, conn);
+        cerrar(rset2, pstmt2, conn2);
 
     } catch (Exception e) {
         out.println("<html><body><h3>Error al generar PDF:</h3><pre>");
         e.printStackTrace(new java.io.PrintWriter(out));
         out.println("</pre></body></html>");
-    }finally {
-        cerrar(rset,pstmt,conn);
     }
-    %>    
+%>

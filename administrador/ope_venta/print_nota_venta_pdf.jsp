@@ -12,6 +12,7 @@
 <%@ page import="com.itextpdf.layout.property.TextAlignment" %>
 <%@ page import="com.itextpdf.layout.property.HorizontalAlignment" %>
 <%@ page import="com.itextpdf.layout.borders.SolidBorder" %>
+<%@ page import="com.itextpdf.layout.borders.Border" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="java.sql.*" %>
@@ -134,19 +135,24 @@
             document.add(tableDoc);
 
             // Datos del cliente
-            document.add(new Paragraph(" "));
-            document.add(new Paragraph("FECHA EMISION: " + x_fec)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("SEÑOR(ES)        : " + s_nombre)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("N.Doc                 : " + s_dni)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
-            document.add(new Paragraph("DIRECCION        : " + s_direc)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(2));
+            // Datos del cliente en tabla para evitar solapamientos y mejorar alineación
+            float[] colWidths = {70, 150};
+            Table clientTable = new Table(colWidths);
+            clientTable.setMarginTop(5);
+            
+            clientTable.addCell(new Cell().add(new Paragraph("FECHA EMISION:").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(x_fec).setMultipliedLeading(1.0f)).setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("SEÑOR(ES):").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_nombre).setMultipliedLeading(1.0f)).setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("N.Doc:").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_dni).setMultipliedLeading(1.0f)).setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("DIRECCION:").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_direc).setMultipliedLeading(1.0f)).setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            document.add(clientTable);
             document.add(new Paragraph(" "));
 
             // Crear tabla para el detalle de productos

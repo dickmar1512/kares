@@ -13,6 +13,7 @@
 <%@ page import="com.itextpdf.layout.property.TextAlignment" %>
 <%@ page import="com.itextpdf.layout.property.HorizontalAlignment" %>
 <%@ page import="com.itextpdf.layout.borders.SolidBorder" %>
+<%@ page import="com.itextpdf.layout.borders.Border" %>
 <%@ page import="com.itextpdf.barcodes.BarcodeQRCode" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.sql.Timestamp" %>
@@ -138,26 +139,33 @@
 
             // Datos del cliente
             document.add(new Paragraph(" "));
-            document.add(new Paragraph("FECHA EMISION: " + dateFormat.format(fechaFormateada))
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(3));
-            document.add(new Paragraph("SEÑOR(ES)        : " + s_nombre)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(3));
-            document.add(new Paragraph("DNI N°                 : " + s_dni)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(3));
-            document.add(new Paragraph("DIRECCION        : " + s_direc)
-                    .setBold().setFontSize(8).setTextAlignment(TextAlignment.LEFT)
-                    .setMultipliedLeading(0.5f).setMarginBottom(3));
+            // Datos del cliente en tabla para evitar solapamientos y mejorar alineación
+            float[] colWidths = {75, 145};
+            Table clientTable = new Table(colWidths);
+            clientTable.setMarginTop(5);
+            
+            clientTable.addCell(new Cell().add(new Paragraph("FECHA EMISION : ").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(dateFormat.format(fechaFormateada)).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("SEÑOR(ES)         :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_nombre).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("DNI N°                  :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_dni).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            clientTable.addCell(new Cell().add(new Paragraph("DIRECCION         :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph(s_direc).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            
+            document.add(clientTable);
+            document.add(new Paragraph(" "));
             document.add(new Paragraph(" "));
 
             // Crear tabla para el detalle de productos
-            float[] columnWidthsProd = {30, 120, 30, 30};
+            float[] columnWidthsProd = {25, 145, 25, 25};
             Table tableProd = new Table(columnWidthsProd);
 
             // Encabezados de la tabla
-            Cell txtCantidad = new Cell().add(new Paragraph("Cant.")
+            Cell txtCantidad = new Cell().add(new Paragraph("Cnt.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(3));
@@ -171,14 +179,14 @@
             txtDescripcion.setBackgroundColor(new DeviceRgb(0, 0, 0));
             tableProd.addCell(txtDescripcion);
 
-            Cell txtImporte = new Cell().add(new Paragraph("Importe")
+            Cell txtImporte = new Cell().add(new Paragraph("P.U.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(3));
             txtImporte.setBackgroundColor(new DeviceRgb(0, 0, 0));
             tableProd.addCell(txtImporte);
 
-            Cell txtSubtotal = new Cell().add(new Paragraph("SubTot.")
+            Cell txtSubtotal = new Cell().add(new Paragraph("Imp.")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setFontColor(new DeviceRgb(255, 255, 255))
                     .setMultipliedLeading(0.5f).setMargin(3));
@@ -207,13 +215,13 @@
                 double subtotal = rset2.getDouble("tota");
 
                 tableProd.addCell(new Cell().add(new Paragraph(String.valueOf(cantidad))
-                        .setFontSize(8).setTextAlignment(TextAlignment.CENTER)));
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.CENTER)));
                 tableProd.addCell(new Cell().add(new Paragraph(producto)
-                        .setFontSize(8)));
+                        .setFontSize(8).setBold()));
                 tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", precio))
-                        .setFontSize(8).setTextAlignment(TextAlignment.RIGHT)));
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.RIGHT)));
                 tableProd.addCell(new Cell().add(new Paragraph(String.format("%.2f", subtotal))
-                        .setFontSize(8).setTextAlignment(TextAlignment.RIGHT)));
+                        .setFontSize(8).setBold().setTextAlignment(TextAlignment.RIGHT)));
             }
 
             // Añadir la tabla de productos al documento
