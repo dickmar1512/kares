@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html ; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ include file="../../config/database.jsp"%>
 <%@ include file= "id.jsp" %>
 <%@ include file= "../seguro.jsp" %>
@@ -51,6 +51,7 @@
                 s_doc  = rset.getString("nombre");
                 s_modo = rset.getString("modo");
             }
+            if(s_tipo_doc.equals("39,41")) { s_doc = "FACTURA Y BOLETA ELECTRÓNICA"; s_modo = "1"; }   
         }catch(Exception ex){
             out.println("Error al obtener el documento: " + ex.getMessage());
         }finally {
@@ -86,7 +87,43 @@
         out.println("Error al obtener la fecha: " + ex.getMessage());
     }finally {
         cerrar(rset, pstmt, conn);
-    }       
+    }
+
+    /*Datos facturador*/
+        // Lista de situaciones
+    java.util.List<java.util.Map<String, String>> situaciones = new java.util.ArrayList<>();
+
+    String[][] datos = {
+        {"01", "Por Generar XML"},
+        {"02", "XML Generado"},
+        {"03", "Enviado y Aceptado SUNAT"},
+        {"04", "Enviado y Aceptado SUNAT con Obs."},
+        {"05", "Rechazado por SUNAT"},
+        {"06", "Con Errores"},
+        {"07", "Por Validar XML"},
+        {"08", "Enviado a SUNAT Por Procesar"},
+        {"09", "Enviado a SUNAT Procesando"},
+        {"10", "Rechazado por SUNAT"},
+        {"11", "Enviado y Aceptado SUNAT"},
+        {"12", "Enviado y Aceptado SUNAT con Obs."}
+    };
+
+    for (String[] item : datos) {
+        java.util.Map<String, String> mapa = new java.util.LinkedHashMap<>();
+        mapa.put("id", item[0]);
+        mapa.put("nombre", item[1]);
+        situaciones.add(mapa);
+    }
+
+    java.util.Map<String, java.util.List<java.util.Map<String, String>>> listaSituacion = new java.util.LinkedHashMap<>();
+    listaSituacion.put("ListaSituacion", situaciones);
+    
+    String DB_PATH = "C:\\SFS_v1.3.4.4\\bd\\BDFacturador.db";
+    String rutaXML = "C:/SFS_v1.3.4.4/sunat_archivos/sfs/FIRMA";
+    String rutaCDR = "C:/SFS_v1.3.4.4/sunat_archivos/sfs/RPTA";
+
+    Connection sqliteDb = conectarSQLite(DB_PATH);
+           
 %>
 <!DOCTYPE html>
 <html lang="es">
@@ -296,10 +333,34 @@
 
         /* ─── PRINT ───────────────────────────────────────────────── */
         @media print {
+            html, body {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .results-card {
+                height: auto !important;
+                display: block !important;
+            }
+            .table-wrapper {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .table-ventas {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .table-ventas thead tr th { 
+                background: #eee !important; 
+                position: static !important; 
+            }
+            .table-ventas tbody tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
             .results-header .btn-print { display: none !important; }
             .meta-bar { background: #fff !important; border-bottom: 1px solid #ccc; }
             body { background: #fff; }
-            .table-ventas thead tr th { background: #eee !important; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -340,6 +401,30 @@
             <i class="fas fa-file-invoice"></i>
             Tipo: <strong><%=s_doc%></strong>
         </div>
+        <div class="meta-item no-print" style="margin-left:auto;">
+            <i class="fas fa-database"></i>
+            SQLite: 
+            <% if(sqliteDb != null){ %>
+                <strong style="color: #27ae60;">Conectado</strong>
+            <% } else { %>
+                <strong style="color: #e74c3c;">Desconectado</strong>
+                <% 
+                   String errorMsg = "";
+                   try { 
+                       Class.forName("org.sqlite.JDBC"); 
+                   } catch (ClassNotFoundException e) { 
+                       errorMsg = "Falta driver org.sqlite.JDBC"; 
+                   }
+                   if(errorMsg.isEmpty()){
+                       java.io.File f = new java.io.File(DB_PATH);
+                       if(!f.exists()) errorMsg = "BD no encontrada en ruta";
+                       else if(!f.canRead()) errorMsg = "Sin permisos de lectura";
+                       else errorMsg = "Error de Conexión SQLite (revise catalina.out)";
+                   }
+                %>
+                <span style="color:#e74c3c; font-size:10.5px; margin-left:4px; font-weight: 600;">[<%=errorMsg%>]</span>
+            <% } %>
+        </div>
     </div>
 
     <!-- ── Table ──────────────────────────────────────────────── -->
@@ -353,7 +438,9 @@
                     <th style="width:115px;">RUC / DNI</th>
                     <th style="width:100px; text-align:right;">Importe</th>
                     <th style="width:100px;">Fecha</th>
-                    <th style="width:120px;">Cajero</th>
+                    <th style="width:200px;">Estado Sunat</th>
+                    <th style="width:200px;text-align:center;" class="no-print">Descargar</th>
+                    <th style="width:120px;" class="no-print">Cajero</th>
                 </tr>
             </thead>
             <tbody id="tabla-body">
@@ -361,6 +448,7 @@
     COMANDO = "Select " +
               "tipo_doc, b.id_personal, " +
               "nom_doc3(tipo_doc) pref, " +
+              "b.serie, " +
               "lpad(b.numdoc,8,'0') numdoc, " +
               "id_mov_vnt, " +
               "b.estado, " +
@@ -386,7 +474,7 @@
     }
 
     if(!s_tipo_doc.equals("00")){
-        COMANDO += "and b.tipo_doc = '"+s_tipo_doc+"' ";
+        COMANDO += "and b.tipo_doc in(" + s_tipo_doc +") ";
     }
     if(!s_id_user.equals("T")){
         COMANDO += "and id_personal_user='"+s_id_user+"' ";
@@ -415,6 +503,119 @@
             double d = Double.parseDouble(importeStr.replace(",",""));
             if(!estado.equals("A")) dblTotal += d;
         } catch(Exception ex) {}
+
+        /*Obtener  situación del documento y link de visualización xml y cdr*/
+        String situacion = "";
+        String serie = rset.getString("serie");
+        String numdoc = rset.getString("numdoc");
+        String link_xml = "";
+        String link_cdr = "";
+
+        // ============================================================
+        // CONSULTA A SQLITE
+        // ============================================================
+        java.util.Map<String, Object> documento = null;
+
+        if (sqliteDb != null) {
+            String numDocuClean = numdoc.replaceFirst("^0+", "");
+            if (numDocuClean.isEmpty()) numDocuClean = "0";
+            String numDocu = serie + "-" + numDocuClean;
+            String query   = "SELECT * FROM DOCUMENTO WHERE NUM_DOCU = ?";
+
+            try (PreparedStatement ps = sqliteDb.prepareStatement(query)) {
+                ps.setString(1, numDocu);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        documento = new java.util.LinkedHashMap<>();
+                        ResultSetMetaData meta = rs.getMetaData();
+                        for (int i = 1; i <= meta.getColumnCount(); i++) {
+                            documento.put(meta.getColumnName(i), rs.getObject(i));
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("[SQLite] Error al consultar DOCUMENTO: " + e.getMessage());
+            }
+        }
+
+        // ============================================================
+        // VALORES POR DEFECTO si no hay resultado o no hay DB
+        // Equivalente a: if ($documento === false)
+        // ============================================================
+        if (documento == null) {
+            documento = new java.util.LinkedHashMap<>();
+            documento.put("FEC_GENE",     null);
+            documento.put("FEC_ENVI",     null);
+            documento.put("FEC_CARG",     null);
+            documento.put("TIP_DOCU",     null);
+            documento.put("NUM_DOCU",     null);
+            documento.put("NUM_RUC",      null);
+            documento.put("NOM_ARCH",     null);
+            documento.put("TIP_ARCH",     null);
+            documento.put("DES_OBSE",     null);
+            documento.put("FIRM_DIGITAL", null);
+            documento.put("IND_SITU",     null);
+        }
+
+        // ============================================================
+        // ASIGNAR VALORES
+        // Equivalente a: $var = $documento['KEY'] ?? '-'
+        // ============================================================
+        String fechaEnvio       = documento.get("FEC_ENVI")  != null ? documento.get("FEC_ENVI").toString()  : "-";
+        String estadoSituacion  = documento.get("IND_SITU")  != null ? documento.get("IND_SITU").toString()  : "-";
+        String nombreArchivo    = documento.get("NOM_ARCH")  != null ? documento.get("NOM_ARCH").toString()  : "-";
+
+        String comprobanteXML   = nombreArchivo + ".xml";
+        String comprobanteCDR   = "R" + nombreArchivo + ".zip";
+
+        // ============================================================
+        // BUSCAR SITUACIÓN EN LA LISTA
+        // Equivalente a: array_filter(...)
+        // ============================================================
+        String nombreSituacion = tipodoc.equals("34") ? "Documento Interno de Venta" : "Ejecutar Facturador sunat"; // valor por defecto
+
+        for (java.util.Map<String, String> item : listaSituacion.get("ListaSituacion")) {
+            if (item.get("id").equals(estadoSituacion)) {
+                nombreSituacion = item.get("nombre");
+                break;
+            }
+        }
+
+        // ============================================================
+        // FLAGS DE DESCARGA
+        // Equivalente a: in_array($estadoSituacion, [...])
+        // ============================================================
+        java.util.List<String> soloXML  = java.util.Arrays.asList("02", "07", "08", "09");
+        java.util.List<String> xmlYCdr  = java.util.Arrays.asList("03", "04", "05", "10", "11", "12");
+
+        boolean descargarXML = false;
+        boolean descargarCDR = false;
+
+        if (soloXML.contains(estadoSituacion)) {
+            descargarXML = true;
+        } else if (xmlYCdr.contains(estadoSituacion)) {
+            descargarXML = true;
+            descargarCDR = true;
+        }
+
+         // ============================================================
+        // LINKS DE DESCARGA XML y CDR
+        // Equivalente a: $descargarXMLLink = $descargarXML ? '...' : ''
+        // ============================================================
+        String descargarXMLLink = descargarXML
+            ? "<a href=\"descargar.jsp?tipo=xml&archivo=" + comprobanteXML + "\" "
+                + "class=\"btn btn-xs btn-outline-primary\" "
+                + "download=\"" + comprobanteXML + "\">"
+                + "<i class=\"fas fa-file-code\"></i> XML</a>"
+            : "";
+
+        String descargarCDRLink = descargarCDR
+            ? "<a href=\"descargar.jsp?tipo=cdr&archivo=" + comprobanteCDR + "\" "
+                + "class=\"btn btn-xs btn-outline-success\">"
+                + "<i class=\"fas fa-file-archive\"></i> CDR</a>"
+            : "";
+        
 %>
                 <tr class="<%=rowClass%>">
                     <td style="text-align:center;">
@@ -442,7 +643,16 @@
                     <td class="date-cell">
                         <i class="far fa-calendar-alt"></i><%=rset.getString("fecemi").trim()%>
                     </td>
-                    <td>
+                    <td style="text-align:center;">
+                        <span class="status-badge <%=badgeClass%>" style="min-width: 40px; font-size: 10px;">
+                            <%=nombreSituacion%>
+                        </span>
+                    </td>
+                    <td style="text-align:center;" class="no-print">
+                        <span class="btn-download"><%=descargarXMLLink%>&nbsp;</span>
+                        <span class="btn-download"><%=descargarCDRLink%></span>
+                    </td>   
+                    <td class="no-print">
                         <span class="cajero-cell">
                             <i class="fas fa-user-circle"></i><%=rset.getString("cajero")%>
                         </span>
@@ -524,7 +734,7 @@
 <!-- jQuery + Bootstrap 4 + AdminLTE -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<%-- <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script> --%>
 <script>
     // Actualizar badge contador
     $(function(){

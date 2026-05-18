@@ -427,7 +427,10 @@
 
     <header class="header">
         <h1><i class="fas fa-utensils"></i> Menú</h1>
-        <div style="display: flex; gap: 10px; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+            <button id="btnMiConsumo" class="mesa-badge" onclick="verMiConsumo()" style="border:none; cursor:pointer; background: rgba(243, 156, 18, 0.2); color: #f39c12; font-weight: 600;">
+                <i class="fas fa-receipt"></i> Consumo: S/ 0.00
+            </button>
             <button class="mesa-badge" onclick="verEstadoPedido()" style="border:none; cursor:pointer; background: rgba(39, 174, 96, 0.2); color: #2ecc71;">
                 <i class="fas fa-clock-rotate-left"></i> Mi Pedido
             </button>
@@ -471,7 +474,10 @@
         let menuData = [];
         let cart = {};
 
-        document.addEventListener('DOMContentLoaded', loadMenu);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMenu();
+            updateConsumoBadge();
+        });
 
         // Búsqueda en tiempo real
         document.getElementById('searchInput').addEventListener('input', function(e) {
@@ -612,6 +618,7 @@
                     cart = {}; // Limpiar carrito
                     updateCartUI();
                     renderMenu(menuData); // Resetear contadores en UI
+                    updateConsumoBadge(); // Actualizar el badge de consumo en la cabecera
                     
                     Swal.fire({
                         icon: 'success',
@@ -711,6 +718,94 @@
             } catch (err) {
                 const container = document.getElementById('statusListContainer');
                 if (container) container.innerHTML = '<p style="color:var(--danger)">Error al conectar con el servidor</p>';
+            }
+        }
+
+        // --- FUNCIONALIDAD DE VISTA DE CONSUMO TOTAL ---
+        async function verMiConsumo() {
+            Swal.fire({
+                title: 'Mi Consumo Total',
+                html: `<div id="consumoListContainer" class="order-status-list">
+                        <div class="loader-container"><div class="spinner"></div><p>Consultando consumo...</p></div>
+                       </div>`,
+                showConfirmButton: true,
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: '#2c3e50',
+                customClass: { popup: 'dark-theme' },
+                didOpen: () => {
+                    updateConsumoList();
+                }
+            });
+        }
+
+        async function updateConsumoList() {
+            try {
+                const response = await fetch(`api_status.jsp?idm=\${idm}&consumo=1`);
+                const data = await response.json();
+                const container = document.getElementById('consumoListContainer');
+                
+                if (!container) return;
+
+                if (data.success) {
+                    if (data.items.length === 0) {
+                        container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted)"><i class="fas fa-receipt fa-2x mb-2"></i><p>Aún no tienes consumos registrados hoy.</p></div>';
+                        return;
+                    }
+
+                    const labels = ["Recibido", "En Cola", "Preparando", "Listo", "Servido"];
+                    let granTotal = 0;
+                    
+                    const itemsHtml = data.items.map(item => {
+                        granTotal += item.total;
+                        return `
+                        <div class="status-item state-\${item.estado}">
+                            <div class="status-header">
+                                <span class="status-name">\${item.cantidad}x \${item.nombre}</span>
+                                <span class="status-label-text label-\${item.estado}">\${labels[item.estado]}</span>
+                            </div>
+                            <div class="status-progress-mini">
+                                <div class="progress-bar-fill fill-\${item.estado}"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Pedido a las \${item.hora}</span>
+                                <span class="item-subtotal">S/ \${item.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+
+                    container.innerHTML = `
+                        \${itemsHtml}
+                        <div class="status-footer">
+                            <span class="total-label">Total Consumido</span>
+                            <span class="total-amount" style="color: #f1c40f;">S/ \${granTotal.toFixed(2)}</span>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<p style="color:var(--danger)">\${data.message}</p>`;
+                }
+            } catch (err) {
+                const container = document.getElementById('consumoListContainer');
+                if (container) container.innerHTML = '<p style="color:var(--danger)">Error al conectar con el servidor</p>';
+            }
+        }
+
+        async function updateConsumoBadge() {
+            try {
+                const response = await fetch(`api_status.jsp?idm=\${idm}&consumo=1`);
+                const data = await response.json();
+                if (data.success) {
+                    let total = 0;
+                    data.items.forEach(item => {
+                        total += item.total;
+                    });
+                    const btn = document.getElementById('btnMiConsumo');
+                    if (btn) {
+                        btn.innerHTML = `<i class="fas fa-receipt"></i> Consumo: S/ \${total.toFixed(2)}`;
+                    }
+                }
+            } catch (err) {
+                console.error("Error al actualizar el consumo en la cabecera:", err);
             }
         }
     </script>

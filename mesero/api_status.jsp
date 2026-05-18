@@ -17,6 +17,9 @@
         return;
     }
 
+    String s_consumo = request.getParameter("consumo");
+    boolean consumo = "1".equals(s_consumo);
+
     try {
         conn = getConexion();
         
@@ -28,10 +31,16 @@
             "FROM vent_regdet d " +
             "INNER JOIN vent_registro r ON d.id_mov_vnt = r.id_mov_vnt " +
             "WHERE r.id_mesa = ? AND d.estado = 'V' AND r.estado = 'V' " +
-            "AND d.id_movart_relacion IS NULL "+             
-            "AND d.estado_atencion IN ('0','1','2','3') " +             
-            "AND r.tipo_doc = '11' "+
-            "ORDER BY d.fecha DESC ";
+            "AND d.id_movart_relacion IS NULL ";
+
+        if (consumo) {
+            COMANDO += "AND d.estado_atencion ='4' ";
+        } else {
+            COMANDO += "AND d.estado_atencion IN ('0','1','2','3') ";
+        }
+
+        COMANDO += "AND r.tipo_doc = '11' " +
+                   "ORDER BY d.fecha DESC ";
             
         pstmt = conn.prepareStatement(COMANDO);
         pstmt.setString(1, s_idm);

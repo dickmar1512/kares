@@ -1,3 +1,4 @@
+<%@ page contentType="text/html ; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ include file="../../config/database.jsp"%>
 <%@ include file= "id.jsp" %>
 <%@ include file= "../seguro.jsp" %>
@@ -51,12 +52,13 @@
     <title>Registro de Ventas</title>
 
     <!-- AdminLTE 3 CSS + Icons + Fonts -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/plugins/adminlte3/css/adminlte.min.css" />
+    <link rel="stylesheet" href="../../assets/plugins/fontawesome6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/css2.css" />
+
     <!-- Flatpickr date picker (reemplaza calendario legacy 404) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+    <link rel="stylesheet" href="../../assets/plugins/flatpickr/css/flatpickr.min.css">
+    <link rel="stylesheet" href="../../assets/plugins/flatpickr/css/airbnb.css">
 
     <style>
         /* ─── BASE ────────────────────────────────────────────────── */
@@ -253,7 +255,8 @@
                         <div class="filter-group">
                             <label><i class="fas fa-file-alt mr-1"></i>Tipo Doc.</label>
                             <select name="f_tipo_doc" class="custom-select select-doc">
-                                <option value="00" selected>Todos</option>
+                                <option value="00">Todos</option>
+                                <option value="39,41" selected>FACTURA Y BOLETA ELECTRÓNICA</option>
 <%
                                 COMANDO = "Select tipo_doc, nombre from cont_tipo_doc " +
                                           "where detdoc = '1' " +
@@ -323,11 +326,11 @@
 </div><!-- /.wrapper -->
 
 <!-- jQuery + Bootstrap 4 (sin adminlte.min.js — evita IFrame.js TypeError en páginas standalone) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/plugins/jquery/jquery.min.js"></script>
+<script src="../../assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- Flatpickr -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="../../assets/plugins/flatpickr/js/flatpickr.js"></script>
+<script src="../../assets/plugins/flatpickr/js/dist/l10n/es.js"></script>
 
 <script>
     /* ── Flatpickr date pickers ────────────────────────────── */

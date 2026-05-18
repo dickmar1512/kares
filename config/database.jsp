@@ -4,6 +4,7 @@
 <%@ page import="java.util.*" %>
 <%@ page import="javax.sql.*" %>
 <%@ page import="javax.naming.*" %>
+<%@ page import="java.io.File" %>
 
 <%!
     // ============================================================
@@ -87,4 +88,47 @@
     SimpleDateFormat sdf1       = new SimpleDateFormat("yyyy-MM-dd");
     SimpleDateFormat sdf2       = new SimpleDateFormat("dd/MM/yyyy");
     SimpleDateFormat sdfHora   = new SimpleDateFormat("HH:mm:ss");
+
+    //Conexion BD Facturador  BDFacturador.db
+
+    public Connection conectarSQLite(String dbPath) {
+        Connection connSQLite = null;
+        File dbFile = new File(dbPath);
+
+        if (!dbFile.exists()) {
+            System.err.println("[SQLite] Archivo no encontrado: " + dbPath);
+            return null;
+        }
+        if (!dbFile.canRead()) {
+            System.err.println("[SQLite] Sin permisos de lectura: " + dbPath);
+            return null;
+        }
+
+        try {
+            Class.forName("org.sqlite.JDBC"); // Cargar driver
+            connSQLite = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+
+            // Equivalente a busyTimeout(5000)
+            // IMPORTANTE: Ejecutar los PRAGMAS antes de setAutoCommit(false) 
+            // ya que SQLite no permite cambiar journal_mode en una transacción.
+            try (Statement stmt = connSQLite.createStatement()) {
+                stmt.execute("PRAGMA busy_timeout = 5000;");
+                stmt.execute("PRAGMA journal_mode = WAL;"); // Mejor concurrencia
+            }
+
+            connSQLite.setAutoCommit(false);
+
+            System.out.println("[SQLite] Conexión exitosa: " + dbPath);
+
+        } catch (ClassNotFoundException e) {
+            System.err.println("[SQLite] Driver no encontrado. Falta sqlite-jdbc.jar: " + e.getMessage());
+            connSQLite = null;
+        } catch (SQLException e) {
+            System.err.println("[SQLite] Error al conectar: " + e.getMessage() + " | BD: " + dbPath);
+            connSQLite = null;
+        }
+
+        return connSQLite;
+    }
+    
 %>
