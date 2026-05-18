@@ -269,6 +269,8 @@ html, body {
     padding: 8px 12px;
     font-size: 13px;
     background: #f8fafc;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
 }
 .card-kares .card-body {
     padding: 0;

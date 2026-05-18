@@ -88,6 +88,7 @@
     .mf-lbl { font-size:11px; font-weight:700; color:#6c757d; text-transform:uppercase; letter-spacing:.05em; text-align:right; }
     .mf-inp, .mf-sel { width:100%; padding:5px 8px; border:1.5px solid #cdd4de; border-radius:6px; font-size:12px; color:#1c2b45; outline:none; background:#fff; box-sizing:border-box; }
     .mf-inp:focus, .mf-sel:focus { border-color:#1a3c6e; box-shadow:0 0 0 3px rgba(26,60,110,.1); }
+    .mf-hr { grid-column: 1 / -1; width: 100%; border: 0; border-top: 1px solid #e2e8f0; margin: 8px 0; }
     .mf-ftr { display:flex; justify-content:flex-end; gap:7px; padding-top:13px; border-top:1px solid #e2e8f0; margin-top:13px; }
     .mf-btn { padding:6px 15px; border:none; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:5px; }
     .mf-btn.cancel { background:#f4f6f9; color:#6c757d; border:1.5px solid #cdd4de; }
@@ -100,6 +101,8 @@
     .swal2-popup .select2-container { width:100% !important; }
     .swal2-popup .select2-selection--single { height:30px !important; border:1.5px solid #cdd4de !important; border-radius:6px !important; }
     .swal2-popup .select2-selection__rendered { line-height:28px !important; font-size:12px !important; }
+    .swal2-popup .select2-results__option { font-size:12px !important; }
+    .swal2-popup .select2-search__field { font-size:12px !important; }
 
     @media (max-width: 768px) {
         .f-src { flex-direction: column; }
@@ -403,7 +406,7 @@ window.buildForm = function(mode, d) {
         '<input class="mf-inp t-jur" name="f_ruc_j" style="display:none;" value="' + (tipo_per === 'J' ? window.escapeHtml(d.ruc || d.numdoc || '') : '') + '" maxlength="15">' +
 
         '<span class="mf-lbl t-nat">Est. Civil</span>' +
-        '<select class="mf-sel mf-s2 t-nat" name="f_estciv" id="f_estciv">' + window.getOpts('tpl_est') + '</select>' +
+        '<select class="mf-sel mf-s2 t-nat mf-col-3" name="f_estciv" id="f_estciv">' + window.getOpts('tpl_est') + '</select>' +
 
         '<hr class="mf-hr">' +
 

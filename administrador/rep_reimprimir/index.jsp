@@ -105,7 +105,7 @@
                                 <th style="width:40px">#</th>
                                 <th>Cliente</th>
                                 <th style="width:110px">RUC / DNI</th>
-                                <th style="width:160px">Comprobante</th>
+                                <th style="width:300px">Comprobante</th>
                                 <th style="width:140px">Fecha</th>
                                 <th style="width:90px; text-align:right">Total</th>
                             </tr>
@@ -116,7 +116,8 @@
                                    "(case when tipo_doc = '39' then razon  else nombre(id_personal) end) nombre, "+
                                    "(case when tipo_doc = '39' then ruc else dni(id_personal) end) docpersona, "+
                                    "date_format(fecha,'%d/%m/%Y %H:%i') fecha, "+
-                                   "concat(nom_doc3(tipo_doc),' ',serie,'-',lpad(numdoc,7,0)) doc, total "+
+                                   "concat(nom_doc3(tipo_doc),' ',serie,'-',lpad(numdoc,7,0)) doc, total, "+
+                                   "id_vnt_ref, ref_doc, ref_obs, ref_motivo "+
                                    "from vent_registro "+
                                    "where tipo_doc = ? "+
                                    "and numdoc = ? ";
@@ -148,10 +149,35 @@
                                     <span class="doc-id"><%=rset.getString("docpersona")%></span>
                                 </td>
                                 <td>
-                                    <span class="doc-badge">
-                                        <i class="fas fa-receipt"></i>
-                                        <%=rset.getString("doc")%>
-                                    </span>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="doc-badge">
+                                            <i class="fas fa-receipt"></i>
+                                            <%=rset.getString("doc")%>
+                                        </span>
+                                        <% if("34".equals(s_tipo_doc)) { 
+                                                String refObs = rset.getString("ref_obs");
+                                                String refDoc = rset.getString("ref_doc");
+                                                String idVntRef = rset.getString("id_vnt_ref");
+                                                String refMotivo = rset.getString("ref_motivo");
+                                                if ("CANJEADO".equalsIgnoreCase(refObs)) {
+                                                    String refUrl = "39".equals(refMotivo) ? "print_factura_electronica_pdf.jsp" : "print_boleta_electronica_pdf.jsp";
+                                                    String refNom = "39".equals(refMotivo) ? "Factura" : "Boleta";
+                                         %>
+                                                    <span class="badge badge-success ml-2 px-2 py-1" style="font-size:10px; font-weight:700;" title="Nota de Venta Canjeada">
+                                                        <i class="fas fa-check-circle mr-1"></i> <%=refNom%>: 
+                                                        <a href="javascript:void(0);" onclick="openPDFModal('<%=idVntRef%>', '<%=refUrl%>')" class="text-white font-weight-bold" style="text-decoration: underline;"><%=refDoc%></a>
+                                                    </span>
+                                         <%     } else { %>
+                                                    <button type="button" 
+                                                            class="btn btn-xs btn-outline-success ml-2 px-2 py-0" 
+                                                            style="font-size:10px; font-weight:700;"
+                                                            onclick="openGenerateModal('<%=rset.getString("id_mov_vnt")%>')"
+                                                            title="Canjear por Comprobante Electrónico">
+                                                        <i class="fas fa-file-invoice"></i> Canjear
+                                                    </button>
+                                         <%     }
+                                            } %>
+                                    </div>
                                 </td>
                                 <td class="date-cell">
                                     <i class="far fa-clock"></i>
@@ -228,10 +254,98 @@
     </div>
 </div>
 
+<!-- ══ MODAL DE CANJE (GENERAR BOLETA O FACTURA) ════════════════════════════ -->
+<div class="modal fade" id="canjeModal" tabindex="-1" aria-labelledby="canjeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:6px; overflow:hidden; border:none; box-shadow: 0 10px 25px rgba(0,0,0,.2);">
+            <div class="modal-header bg-success text-white" style="border-bottom:none; padding:12px 20px;">
+                <h5 class="modal-title font-weight-bold" id="canjeModalLabel" style="font-size:15px;">
+                    <i class="fas fa-file-invoice mr-2"></i>
+                    Canjear por Comprobante Electrónico
+                </h5>
+                <button type="button" class="close text-white ml-auto" data-dismiss="modal" aria-label="Cerrar" style="opacity:.9; outline:none;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="canjeForm" onsubmit="procesarCanje(event)">
+                <input type="hidden" id="canje_id_mov_vnt" name="id_mov_vnt">
+                <div class="modal-body p-4" style="background:#f8fafc;">
+                    <div class="row">
+                        <!-- Selector de Comprobante -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label font-weight-bold text-secondary mb-1" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Tipo de Comprobante</label>
+                            <select class="form-control form-control-sm font-weight-bold" id="canje_tipo_compro" name="tipo_comprobante" required style="border-radius:4px;">
+                                <option value="41" selected>Boleta Electrónica</option>
+                                <option value="39">Factura Electrónica</option>
+                            </select>
+                        </div>
+                        
+                        <!-- DNI o RUC -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label font-weight-bold text-secondary mb-1" id="label_doc_num" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">DNI del Cliente</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="canje_dni" name="dni" maxlength="8" pattern="\d{8}" placeholder="Ingrese 8 dígitos" required style="border-radius:4px 0 0 4px;">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-dark font-weight-bold px-3" onclick="buscarDniDinamico()" title="Buscar en sistema" style="border-radius:0 4px 4px 0;">
+                                        <i class="fas fa-search mr-1"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Campos de Factura: Razón Social -->
+                        <div class="col-md-12 mb-3 field-factura" style="display:none;">
+                            <label class="form-label font-weight-bold text-secondary mb-1" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Razón Social</label>
+                            <input type="text" class="form-control form-control-sm" id="canje_razon_social" name="razon_social" style="border-radius:4px;">
+                        </div>
+                        
+                        <!-- Campos de Boleta: Nombres, Apellidos, Sexo -->
+                        <div class="col-md-12 mb-3 field-boleta">
+                            <label class="form-label font-weight-bold text-secondary mb-1" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Nombres</label>
+                            <input type="text" class="form-control form-control-sm" id="canje_nombre" name="nombre" required style="border-radius:4px;">
+                        </div>
+                        <div class="col-md-6 mb-3 field-boleta">
+                            <label class="form-label font-weight-bold text-secondary mb-1" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Apellido Paterno</label>
+                            <input type="text" class="form-control form-control-sm" id="canje_apepat" name="apepat" required style="border-radius:4px;">
+                        </div>
+                        <div class="col-md-6 mb-3 field-boleta">
+                            <label class="form-label font-weight-bold text-secondary mb-1" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Apellido Materno</label>
+                            <input type="text" class="form-control form-control-sm" id="canje_apemat" name="apemat" required style="border-radius:4px;">
+                        </div>
+                        <div class="col-md-12 mb-3 field-boleta">
+                            <label class="form-label font-weight-bold text-secondary mb-1" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Sexo</label>
+                            <select class="form-control form-control-sm" id="canje_sexo" name="sexo" required style="border-radius:4px;">
+                                <option value="" disabled selected>— Seleccione —</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Dirección (Común) -->
+                        <div class="col-md-12 mb-1">
+                            <label class="form-label font-weight-bold text-secondary mb-1" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Dirección</label>
+                            <input type="text" class="form-control form-control-sm" id="canje_direccion" name="direccion" placeholder="Opcional" style="border-radius:4px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background:#f1f5f9; border-top:1px solid #e2e8f0; padding:12px 20px;">
+                    <button type="button" class="btn btn-sm btn-secondary font-weight-bold px-3" data-dismiss="modal" style="border-radius:4px;">
+                        <i class="fas fa-times mr-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-success font-weight-bold px-4" style="border-radius:4px; background:#22c55e; border:none;">
+                        <i class="fas fa-check mr-1"></i>Generar Comprobante
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- jQuery + Bootstrap 4 + AdminLTE -->
 <script src="../../assets/plugins/jquery/jquery.min.js"></script>
 <script src="../../assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/plugins/sweetalert2/sweetalert2.11.js"></script>
 <%-- <script src="../../assets/plugins/adminlte3/js/adminlte.min.js"></script> --%>
-<script src="../../assets/js/administrador/rep_reimprimir/index.js"></script>
+<script src="../../assets/js/administrador/rep_reimprimir/index.js?v=<%=System.currentTimeMillis()%>"></script>
 </body>
 </html>

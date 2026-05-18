@@ -11,6 +11,15 @@ $(document).ready(function() {
                 data: { q: request.term },
                 success: function(data) {
                     if (data.error) { response([]); return; }
+                    if (data.items.length === 0) {
+                        response([{
+                            label: "❌ Cliente no encontrado. ¿Registrar nuevo?",
+                            value: "",
+                            id: "NEW_CLIENT_PROMPT",
+                            documento: ""
+                        }]);
+                        return;
+                    }
                     response($.map(data.items, function(item) {
                         return {
                             label: item.text + (item.documento ? ' - DNI: ' + item.documento : ''),
@@ -24,18 +33,31 @@ $(document).ready(function() {
             });
         },
         select: function(event, ui) {
+            if (ui.item.id === "NEW_CLIENT_PROMPT") {
+                abrirModalNuevoCliente();
+                $('#datosCliente #txtbuscar').val('');
+                return false;
+            }
             $('#datosCliente #txtbuscar').val(ui.item.value);
             $('#datosCliente #f_id_personal').val(ui.item.id);
             return false;
         },
         change: function(event, ui) {
-            if (!ui.item) $('#datosCliente #f_id_personal').val('');
+            if (!ui.item || ui.item.id === "NEW_CLIENT_PROMPT") $('#datosCliente #f_id_personal').val('');
         },
         focus: function(event, ui) {
+            if (ui.item.id === "NEW_CLIENT_PROMPT") {
+                return false;
+            }
             $('#txtbuscar').val(ui.item.value);
             return false;
         }
     }).autocomplete("instance")._renderItem = function(ul, item) {
+        if (item.id === "NEW_CLIENT_PROMPT") {
+            return $("<li>")
+                .append("<div class='autocomplete-item bg-light text-success font-weight-bold'><i class='fas fa-user-plus mr-1'></i> " + item.label + "</div>")
+                .appendTo(ul);
+        }
         return $("<li>")
             .append("<div class='autocomplete-item'><strong>" + item.value + "</strong><br>" +
                     "<small class='text-muted'>" + (item.documento ? 'DNI: ' + item.documento : '') + "</small></div>")
@@ -253,5 +275,119 @@ function confirmarEliminar(idMovVnt, idMovart, idm) {
             .catch(function(err) {
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Error al procesar: ' + err });
             });
+    });
+}
+
+function abrirModalNuevoCliente() {
+    $('#formNuevoCliente')[0].reset();
+    ajustarCamposDocumento();
+    $('#modalNuevoCliente').modal('show');
+}
+
+function ajustarCamposDocumento() {
+    var tipdoc = $('#reg_tipdoc').val();
+    if (tipdoc === '1') {
+        // DNI
+        $('#lbl_reg_numdoc').html('<i class="fas fa-fingerprint mr-1"></i> Nro. de Documento (DNI) <span class="text-danger">*</span>');
+        $('#reg_numdoc').attr('maxlength', '8').attr('placeholder', 'Ingrese DNI (8 dígitos)');
+        $('#lbl_reg_nombre').html('<i class="fas fa-user mr-1"></i> Nombres <span class="text-danger">*</span>');
+        $('#group_apepat').show();
+        $('#group_apemat').show();
+        $('#group_sexo').show();
+    } else {
+        // RUC
+        $('#lbl_reg_numdoc').html('<i class="fas fa-fingerprint mr-1"></i> Nro. de Documento (RUC) <span class="text-danger">*</span>');
+        $('#reg_numdoc').attr('maxlength', '11').attr('placeholder', 'Ingrese RUC (11 dígitos)');
+        $('#lbl_reg_nombre').html('<i class="fas fa-building mr-1"></i> Razón Social <span class="text-danger">*</span>');
+        $('#group_apepat').hide();
+        $('#group_apemat').hide();
+        $('#group_sexo').hide();
+    }
+}
+
+function guardarNuevoCliente() {
+    var tipdoc = $('#reg_tipdoc').val();
+    var numdoc = $('#reg_numdoc').val().trim();
+    var nombre = $('#reg_nombre').val().trim();
+    var apepat = $('#reg_apepat').val().trim();
+    var apemat = $('#reg_apemat').val().trim();
+    var sexo = $('#reg_sexo').val();
+    var direccion = $('#reg_direccion').val().trim();
+    var telefono = $('#reg_telefono').val().trim();
+    var correo = $('#reg_correo').val().trim();
+
+    if (!numdoc) {
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'El número de documento es obligatorio.' });
+        return;
+    }
+    if (tipdoc === '1' && numdoc.length !== 8) {
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'El DNI debe tener 8 dígitos.' });
+        return;
+    }
+    if (tipdoc === 'E' && numdoc.length !== 11) {
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'El RUC debe tener 11 dígitos.' });
+        return;
+    }
+    if (!nombre) {
+        var msg = tipdoc === '1' ? 'El nombre es obligatorio.' : 'La razón social es obligatoria.';
+        Swal.fire({ icon: 'warning', title: 'Atención', text: msg });
+        return;
+    }
+    if (tipdoc === '1' && (!apepat || !apemat)) {
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'Los apellidos paterno y materno son obligatorios.' });
+        return;
+    }
+    if (tipdoc === '1' && !sexo) {
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'Debe seleccionar el sexo.' });
+        return;
+    }
+    if (!direccion) {
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'La dirección es obligatoria.' });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Guardando...',
+        text: 'Registrando cliente en el sistema',
+        allowOutsideClick: false,
+        didOpen: function() { Swal.showLoading(); }
+    });
+
+    $.ajax({
+        url: 'save_cliente_ajax.jsp',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            tipdoc: tipdoc,
+            numdoc: numdoc,
+            nombre: nombre,
+            apepat: apepat,
+            apemat: apemat,
+            sexo: sexo,
+            direccion: direccion,
+            telefono: telefono,
+            correo: correo
+        },
+        success: function(data) {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Cliente registrado!',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(function() {
+                    $('#modalNuevoCliente').modal('hide');
+                    // Rellenar automáticamente en el buscador principal
+                    $('#datosCliente #txtbuscar').val(data.nombre);
+                    $('#datosCliente #f_id_personal').val(data.id_personal);
+                });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            }
+        },
+        error: function(xhr) {
+            Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo comunicar con el servidor.' });
+        }
     });
 }
