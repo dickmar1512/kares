@@ -50,13 +50,13 @@
                     </a>
                 </div>
 
-                <div class="module-card">
+                <%-- <div class="module-card">
                     <a href="caja/login.jsp" class="module-link" style="background:none; border:none; width:100%;cursor:pointer; text-align:center; padding:0;">
                         <h2 class="module-title">Caja</h2>
                         <img src="assets/images/pagos.png" alt="Caja" class="module-icon">
                         <p class="module-description">Módulo de cobros y pagos</p>
                     </a>
-                </div>
+                </div> --%>
 
                 <div class="module-card">
                     <a href="mesa/login.jsp" class="module-link" style="background:none; border:none; width:100%;cursor:pointer; text-align:center; padding:0;">
