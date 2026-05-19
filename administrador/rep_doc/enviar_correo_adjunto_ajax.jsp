@@ -64,6 +64,8 @@
     final boolean useSsl = configJson.optBoolean("use_ssl", false);
     final String fromAddress = configJson.optString("from_address", smtpUser).trim();
     final String fromName = configJson.optString("from_name", "Kares Facturación").trim();
+    final String sslTrust = configJson.optString("ssl_trust", "").trim();
+
 
     if (smtpHost.isEmpty() || smtpUser.isEmpty() || smtpPass.isEmpty()) {
         json.put("success", false);
@@ -106,11 +108,23 @@
         prop.put("mail.smtp.port", String.valueOf(smtpPort));
         prop.put("mail.smtp.auth", "true");
         prop.put("mail.smtp.starttls.enable", useTls ? "true" : "false");
+        prop.put("mail.smtp.connectiontimeout", "15000"); // 15s timeout
+        prop.put("mail.smtp.timeout", "15000");           // 15s read timeout
+
+        // Configuración de Confianza SSL/TLS para evitar errores PKIX en producción
+        if (!sslTrust.isEmpty()) {
+            prop.put("mail.smtp.ssl.trust", sslTrust);
+        } else {
+            prop.put("mail.smtp.ssl.trust", "*"); // Confianza total por defecto para evitar errores PKIX
+        }
 
         if (useSsl) {
             prop.put("mail.smtp.socketFactory.port", String.valueOf(smtpPort));
             prop.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
             prop.put("mail.smtp.socketFactory.fallback", "false");
+            if (!sslTrust.isEmpty()) {
+                prop.put("mail.smtp.ssl.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            }
         }
 
         Session mailSession = Session.getInstance(prop, new javax.mail.Authenticator() {
@@ -178,10 +192,10 @@
         json.put("success", true);
         json.put("message", "Correo electrónico enviado exitosamente con sus adjuntos reales.");
 
-    } catch (Exception e) {
+    } catch (Throwable e) {
         e.printStackTrace();
         json.put("success", false);
-        json.put("message", "Error de conexión SMTP o en el servidor: " + e.getMessage());
+        json.put("message", "Error de conexión SMTP o en el servidor: " + e.toString());
     } finally {
         // Eliminar el PDF temporal para mantener el servidor limpio
         if (tempPdf.exists()) {
