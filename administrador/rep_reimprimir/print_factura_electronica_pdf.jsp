@@ -78,7 +78,16 @@
 
             // Configurar el PDF con tamaño personalizado (80mm x altura dinámica)
             float width = 226.77f; // 80mm en puntos
-            float height = 842f; // Altura inicial
+            
+            // Calcular cantidad de items para altura dinámica
+            int cantItems = 0;
+            PreparedStatement pstmtCant = conn.prepareStatement("SELECT COUNT(*) as cant FROM vent_regdet WHERE id_mov_vnt = ? AND estado <> 'X'");
+            pstmtCant.setString(1, f_id_mov_vnt);
+            ResultSet rsCant = pstmtCant.executeQuery();
+            if(rsCant.next()) cantItems = rsCant.getInt("cant");
+            cerrar(rsCant, pstmtCant, null);
+            
+            float height = 550f + (cantItems * 30f); // Altura dinámica: base + margen por item
             
             PdfWriter writer = new PdfWriter(response.getOutputStream());
             PdfDocument pdfDoc = new PdfDocument(writer);
