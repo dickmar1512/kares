@@ -254,7 +254,7 @@
                         <!-- Tipo Documento -->
                         <div class="filter-group">
                             <label><i class="fas fa-file-alt mr-1"></i>Tipo Doc.</label>
-                            <select name="f_tipo_doc" class="custom-select select-doc">
+                            <select name="f_tipo_doc" class="custom-select select-doc" style="width: 200px;">
                                 <option value="00">Todos</option>
                                 <option value="39,41" selected>FACTURA Y BOLETA ELECTRÓNICA</option>
 <%
@@ -275,7 +275,7 @@
                         <!-- Cajero / Usuario -->
                         <div class="filter-group">
                             <label><i class="fas fa-user mr-1"></i>Cajero</label>
-                            <select name="f_id_personal_user" class="custom-select select-user">
+                            <select name="f_id_personal_user" class="custom-select select-user" style="width: 250px;">
                                 <option value="T">Todos</option>
 <%
                                 COMANDO = "Select a.id_personal, " +
