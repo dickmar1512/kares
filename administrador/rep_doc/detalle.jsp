@@ -133,9 +133,9 @@
     <title>Registro de Ventas - Detalle</title>
 
     <!-- AdminLTE 3 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/plugins/adminlte3/css/adminlte.min.css">
+    <link rel="stylesheet" href="../../assets/plugins/fontawesome6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/source-sans-pro.css" />
 
     <style>
         /* ─── BASE ────────────────────────────────────────────────── */
@@ -440,6 +440,7 @@
                     <th style="width:100px;">Fecha</th>
                     <th style="width:200px;">Estado Sunat</th>
                     <th style="width:200px;text-align:center;" class="no-print">Descargar</th>
+                    <th style="width:100px;text-align:center;" class="no-print">Enviar</th>
                     <th style="width:120px;" class="no-print">Cajero</th>
                 </tr>
             </thead>
@@ -652,6 +653,17 @@
                         <span class="btn-download"><%=descargarXMLLink%>&nbsp;</span>
                         <span class="btn-download"><%=descargarCDRLink%></span>
                     </td>   
+                    <td style="text-align:center;" class="no-print">
+                        <% if(tipodoc.equals("39") || tipodoc.equals("41")) { %>
+                            <button type="button" class="btn btn-xs btn-outline-info" style="font-weight:600; border-radius:4px; padding: 2px 7px;" title="Compartir Comprobante"
+                                    onclick="abrirModalCompartir('<%=rset.getString("id_mov_vnt")%>', '<%=tipodoc%>', '<%=rset.getString("pref").trim()%>-<%=rset.getString("numdoc").trim()%>', '<%=comprobanteXML%>', '<%=comprobanteCDR%>')">
+                                <i class="fab fa-whatsapp text-success mr-1"></i>
+                                <i class="far fa-envelope text-primary mr-1"></i> Enviar
+                            </button>
+                        <% } else { %>
+                            <span class="text-muted">-</span>
+                        <% } %>
+                    </td>
                     <td class="no-print">
                         <span class="cajero-cell">
                             <i class="fas fa-user-circle"></i><%=rset.getString("cajero")%>
@@ -661,7 +673,7 @@
 <%  } %>
 <% if(contador == 0){ %>
                 <tr>
-                    <td colspan="7" class="no-results-cell">
+                    <td colspan="10" class="no-results-cell">
                         <div class="no-results-box">
                             <div class="nr-icon">
                                 <i class="fas fa-inbox"></i>
@@ -731,6 +743,67 @@
 
 </div><!-- /.results-card -->
 
+<!-- ── Modal de Compartir Comprobante ── -->
+<div class="modal fade no-print" id="modalCompartir" tabindex="-1" role="dialog" aria-labelledby="modalCompartirLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content" style="border-radius: 8px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background: #1a3c6e; color: #fff; border-top-left-radius: 8px; border-top-right-radius: 8px; padding: 12px 16px;">
+        <h5 class="modal-title" id="modalCompartirLabel" style="font-size: 14px; font-weight: 700;">
+            <i class="fas fa-share-nodes mr-2"></i> Compartir Comprobante <span id="comp_label" class="text-warning"></span>
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="outline: none; background: transparent; border: none; font-size: 20px;">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div id="modal_loader" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Cargando...</span>
+            </div>
+            <p class="text-muted mt-2 mb-0" style="font-size: 12px;">Obteniendo datos de contacto del cliente...</p>
+        </div>
+        
+        <div id="modal_content" style="display: none;">
+            <div class="form-group mb-3">
+                <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">Cliente</label>
+                <input type="text" id="share_cliente" class="form-control form-control-sm" readonly style="background: #f7fafc; font-weight: 600; color: #2d3748;">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;"><i class="fab fa-whatsapp text-success mr-1"></i> Celular (WhatsApp)</label>
+                        <input type="text" id="share_telefono" class="form-control form-control-sm" placeholder="Ej. 995089676">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;"><i class="far fa-envelope text-primary mr-1"></i> Correo Electrónico</label>
+                        <input type="email" id="share_email" class="form-control form-control-sm" placeholder="Ej. cliente@correo.com">
+                    </div>
+                </div>
+            </div>
+            
+            <hr style="margin: 15px 0; border-top: 1px solid #edf2f7;">
+            
+            <div class="row">
+                <div class="col-6">
+                    <button type="button" class="btn btn-success btn-sm btn-block" style="font-weight: 700; padding: 7px; font-size: 12px;" onclick="enviarPorWhatsApp()">
+                        <i class="fab fa-whatsapp mr-1"></i> WhatsApp
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-primary btn-sm btn-block" style="font-weight: 700; padding: 7px; font-size: 12px;" onclick="enviarPorEmail()">
+                        <i class="far fa-envelope mr-1"></i> Correo (mailto)
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- jQuery + Bootstrap 4 + AdminLTE -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -741,6 +814,168 @@
         var n = <%=contador%>;
         $('#badge-count').text(n + ' registro' + (n !== 1 ? 's' : ''));
     });
+
+    var currentVenta = {
+        id_mov_vnt: "",
+        tipo_doc: "",
+        comprobante: "",
+        xmlFile: "",
+        cdrFile: "",
+        cliente: "",
+        pdfUrl: "",
+        xmlUrl: "",
+        cdrUrl: ""
+    };
+
+    function abrirModalCompartir(id_mov_vnt, tipo_doc, comprobante, xmlFile, cdrFile) {
+        currentVenta.id_mov_vnt = id_mov_vnt;
+        currentVenta.tipo_doc = tipo_doc;
+        currentVenta.comprobante = comprobante;
+        currentVenta.xmlFile = xmlFile;
+        currentVenta.cdrFile = cdrFile;
+
+        // Construir URLs dinámicas absolutas de descarga
+        var loc = window.location;
+        var baseApp = loc.protocol + "//" + loc.host + loc.pathname.substring(0, loc.pathname.indexOf('/administrador/'));
+        
+        // PDF link
+        var pdfPath = tipo_doc === '39' ? '/administrador/rep_reimprimir/print_factura_electronica_pdf.jsp' : '/administrador/rep_reimprimir/print_boleta_electronica_pdf.jsp';
+        currentVenta.pdfUrl = baseApp + pdfPath + "?f_id_mov_vnt=" + id_mov_vnt;
+        
+        // XML & CDR link
+        currentVenta.xmlUrl = baseApp + "/administrador/rep_doc/descargar.jsp?tipo=xml&archivo=" + xmlFile;
+        currentVenta.cdrUrl = baseApp + "/administrador/rep_doc/descargar.jsp?tipo=cdr&archivo=" + cdrFile;
+
+        // Resetear modal y mostrar loader
+        $('#comp_label').text(comprobante);
+        $('#modal_loader').show();
+        $('#modal_content').hide();
+        $('#modalCompartir').modal('show');
+
+        // Fetch datos de contacto del cliente
+        $.getJSON('get_cliente_contacto.jsp', { id_mov_vnt: id_mov_vnt })
+            .done(function(data) {
+                $('#modal_loader').hide();
+                if (data.success) {
+                    currentVenta.cliente = data.cliente;
+                    $('#share_cliente').val(data.cliente);
+                    $('#share_telefono').val(data.telefono);
+                    $('#share_email').val(data.email);
+                    $('#modal_content').show();
+                } else {
+                    alert("Error al cargar datos de contacto: " + data.message);
+                    $('#modalCompartir').modal('hide');
+                }
+            })
+            .fail(function() {
+                $('#modal_loader').hide();
+                alert("Error de conexión al servidor al recuperar datos del cliente.");
+                $('#modalCompartir').modal('hide');
+            });
+    }
+
+    function downloadFile(url, filename) {
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function enviarPorWhatsApp() {
+        var telefono = $('#share_telefono').val().trim();
+        if (!telefono) {
+            alert("Por favor, ingrese un número de celular.");
+            return;
+        }
+        // Asegurar código de país (Perú +51 por defecto si tiene 9 dígitos)
+        var numCelular = telefono;
+        if (numCelular.length === 9 && numCelular.startsWith('9')) {
+            numCelular = "51" + numCelular;
+        }
+
+        // 1. Descargar los 3 documentos físicamente en la PC del cajero para poder arrastrarlos a WhatsApp
+        downloadFile(currentVenta.pdfUrl, currentVenta.comprobante + ".pdf");
+        downloadFile(currentVenta.xmlUrl, currentVenta.xmlFile);
+        downloadFile(currentVenta.cdrUrl, currentVenta.cdrFile);
+
+        var texto = "*Estimado(a) Cliente*,\n\n" +
+                    "Le hacemos llegar la información de su comprobante electrónico *"+currentVenta.comprobante+"*.\n\n" +
+                    "Adjuntamos a este mensaje sus documentos oficiales (PDF, XML y CDR).\n\n" +
+                    "¡Muchas gracias por su preferencia!";
+
+        // 2. Copiar el texto formateado al portapapeles del cajero
+        navigator.clipboard.writeText(texto).then(function() {
+            alert("¡Archivos PDF, XML y CDR descargados automáticamente!\n\nSe ha copiado el texto del mensaje a tu portapapeles. Pega el mensaje (Ctrl+V) en el chat de WhatsApp y arrastra los archivos descargados para enviarlos como adjuntos reales.");
+            
+            var url = "https://api.whatsapp.com/send?phone=" + numCelular + "&text=" + encodeURIComponent(texto);
+            window.open(url, "_blank");
+        }).catch(function() {
+            var url = "https://api.whatsapp.com/send?phone=" + numCelular + "&text=" + encodeURIComponent(texto);
+            window.open(url, "_blank");
+        });
+    }
+
+    function enviarPorEmail() {
+        var email = $('#share_email').val().trim();
+        if (!email) {
+            alert("Por favor, ingrese un correo electrónico.");
+            return;
+        }
+
+        // Mostrar cargador en el modal
+        $('#modal_loader p').text("Enviando correo con archivos adjuntos reales (PDF, XML, CDR)...");
+        $('#modal_loader').show();
+        $('#modal_content').hide();
+
+        // Enviar vía AJAX al backend que descarga el PDF y ejecuta el mailer Python
+        $.post('enviar_correo_adjunto_ajax.jsp', {
+            id_mov_vnt: currentVenta.id_mov_vnt,
+            email: email,
+            xmlFile: currentVenta.xmlFile,
+            cdrFile: currentVenta.cdrFile,
+            comprobante: currentVenta.comprobante,
+            cliente: currentVenta.cliente,
+            tipo_doc: currentVenta.tipo_doc
+        }, function(data) {
+            $('#modal_loader').hide();
+            $('#modal_content').show();
+            if (data.success) {
+                alert("¡Correo enviado con éxito! Los archivos PDF, XML y CDR se han enviado como adjuntos reales.");
+                $('#modalCompartir').modal('hide');
+            } else {
+                // Ofrecer fallback local si SMTP no está configurado
+                if (data.message.indexOf("configuración SMTP") !== -1 || data.message.indexOf("SMTP") !== -1) {
+                    var conf = confirm("El servidor de correo SMTP no está configurado en email_config.json o falló la conexión.\n\n¿Deseas enviar el correo pre-formateado utilizando tu aplicación de correo local (Outlook/Gmail) en su lugar?");
+                    if (conf) {
+                        fallbackLocalEmail(email);
+                    }
+                } else {
+                    alert("Error al enviar correo: " + data.message);
+                }
+            }
+        }, 'json').fail(function() {
+            $('#modal_loader').hide();
+            $('#modal_content').show();
+            alert("Error de conexión con el servidor al intentar enviar el correo.");
+        });
+    }
+
+    function fallbackLocalEmail(email) {
+        var asunto = "Comprobante Electrónico " + currentVenta.comprobante;
+        var cuerpo = "Estimado(a) Cliente,\n\n" +
+                     "Le hacemos llegar la información de su comprobante electrónico "+currentVenta.comprobante+".\n\n" +
+                     "Puede visualizar y descargar sus archivos en los siguientes enlaces:\n\n" +
+                     "- Representación Impresa (PDF):\n" + currentVenta.pdfUrl + "\n\n" +
+                     "- Archivo firmado (XML):\n" + currentVenta.xmlUrl + "\n\n" +
+                     "- Constancia de Aceptación (CDR):\n" + currentVenta.cdrUrl + "\n\n" +
+                     "Muchas gracias por su preferencia.";
+
+        var url = "mailto:" + email + "?subject=" + encodeURIComponent(asunto) + "&body=" + encodeURIComponent(cuerpo);
+        window.location.href = url;
+    }
 </script>
 </body>
 </html>

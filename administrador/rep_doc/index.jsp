@@ -54,7 +54,7 @@
     <!-- AdminLTE 3 CSS + Icons + Fonts -->
     <link rel="stylesheet" href="../../assets/plugins/adminlte3/css/adminlte.min.css" />
     <link rel="stylesheet" href="../../assets/plugins/fontawesome6.7.2/css/all.min.css">
-    <link rel="stylesheet" href="../../assets/css/css2.css" />
+    <link rel="stylesheet" href="../../assets/css/source-sans-pro.css" />
 
     <!-- Flatpickr date picker (reemplaza calendario legacy 404) -->
     <link rel="stylesheet" href="../../assets/plugins/flatpickr/css/flatpickr.min.css">
