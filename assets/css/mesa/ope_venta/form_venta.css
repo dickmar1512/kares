@@ -72,36 +72,58 @@ html, body {
     padding: 0;
 }
 
+/* ── Contenedor con scroll para más de 10 items ───────────────── */
+#datos .table-responsive {
+    max-height: 400px !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #c8d0e0 transparent !important;
+}
+#datos .table-responsive::-webkit-scrollbar {
+    width: 5px !important;
+}
+#datos .table-responsive::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+#datos .table-responsive::-webkit-scrollbar-thumb {
+    background: #c8d0e0 !important;
+    border-radius: 4px !important;
+}
+
 /* ── Tabla compacta de nueva orden ─────────────────────────── */
 .table-orden {
-    width: 100%;
-    font-size: 11.5px;
-    border-collapse: collapse;
-    margin: 0;
+    width: 100% !important;
+    font-size: 11.5px !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    margin: 0 !important;
 }
 .table-orden thead th {
-    background: #eef1f7;
-    color: #3d5170;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .3px;
-    padding: 6px 8px;
-    border-bottom: 2px solid #d0d8e8;
-    white-space: nowrap;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: #eef1f7 !important;
+    color: #3d5170 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .3px !important;
+    padding: 6px 8px !important;
+    box-shadow: inset 0 -2px 0 #d0d8e8 !important;
+    white-space: nowrap !important;
 }
 .table-orden tbody td {
-    padding: 5px 8px;
-    border-bottom: 1px solid #f0f2f7;
-    vertical-align: middle;
+    padding: 5px 8px !important;
+    border-bottom: 1px solid #f0f2f7 !important;
+    vertical-align: middle !important;
 }
-.table-orden tbody tr:last-child td { border-bottom: none; }
-.table-orden tbody tr:hover { background: #f5f7fc; }
+.table-orden tbody tr:last-child td { border-bottom: none !important; }
+.table-orden tbody tr:hover { background: #f5f7fc !important; }
 
 /* Fila inactiva (anulada) */
 .table-orden tbody tr.row-inac td {
-    opacity: .5;
-    text-decoration: line-through;
+    opacity: .5 !important;
+    text-decoration: line-through !important;
 }
 
 /* Badge de número de ítem */
@@ -185,20 +207,24 @@ html, body {
 
 /* ── Fila de total de nueva orden ───────────────────────────── */
 .tfoot-orden {
-    background: #f0f2f7;
+    background: #f0f2f7 !important;
 }
 .tfoot-orden td {
-    padding: 5px 8px;
-    font-size: 11.5px;
-    font-weight: 700;
-    color: #1a3c6e;
-    border-top: 2px solid #d0d8e8;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 10 !important;
+    background: #f0f2f7 !important;
+    padding: 5px 8px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #1a3c6e !important;
+    box-shadow: inset 0 2px 0 #d0d8e8 !important;
 }
 .tfoot-total-val {
-    text-align: right;
-    font-size: 13px;
-    font-weight: 800;
-    color: #1a3c6e;
+    text-align: right !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #1a3c6e !important;
 }
 
 /* ── Tabla de órdenes registradas ───────────────────────────── */

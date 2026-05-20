@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../assets/plugins/adminlte3/css/adminlte.min.css">
     <link rel="stylesheet" href="../../assets/plugins/fontawesome6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../assets/css/kares-grid.css">
-    <link rel="stylesheet" href="../../assets/css/mesa/ope_venta/form_venta.css">
+    <link rel="stylesheet" href="../../assets/css/mesa/ope_venta/form_venta.css?v=1.0.2">
 </head>
 <%
     double suma_total = 0;
