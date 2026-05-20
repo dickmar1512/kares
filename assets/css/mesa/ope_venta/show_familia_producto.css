@@ -68,7 +68,8 @@ html, body {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 1px;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: #c8d0e0 transparent;
 }
 .nav-tabs-compact::-webkit-scrollbar { display: none; }
 

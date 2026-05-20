@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="../../assets/plugins/fontawesome6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../assets/plugins/adminlte3/css/adminlte.min.css">
     <link rel="stylesheet" href="../../assets/css/kares-grid.css">
-    <link rel="stylesheet" href="../../assets/css/mesa/ope_venta/show_familia_producto.css">
+    <link rel="stylesheet" href="../../assets/css/mesa/ope_venta/show_familia_producto.css?v=1.0.1">
 </head>
 <body>
 
