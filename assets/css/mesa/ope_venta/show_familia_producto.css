@@ -185,6 +185,7 @@ html, body {
     min-height: 28px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -241,6 +242,7 @@ html, body {
     color: #1e293b;
     background: #fff;
     -moz-appearance: textfield;
+    appearance: textfield;
     outline: none;
 }
 .qty-input::-webkit-inner-spin-button,
