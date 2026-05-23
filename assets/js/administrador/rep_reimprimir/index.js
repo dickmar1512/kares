@@ -2,6 +2,12 @@
 let currentPdfUrl = '';
 let basePrintUrl = '';
 
+// Variables para el flujo de canje por producto
+let canjeCurrentIdMovVnt = '';
+let canjeProductosData = [];
+let canjeSelectedMovarts = [];
+let canjeSelectedTotal = 0;
+
 $(function() {
     // Initial results count
     const rows = $('table.table-kares tbody tr:not(.no-results-row)').length;
@@ -40,17 +46,168 @@ function printPDF() {
     }
 }
 
-/* ── Canje de Nota de Venta por Comprobante Electrónico ────────────────── */
-function openGenerateModal(idMovVnt) {
-    $('#canje_id_mov_vnt').val(idMovVnt);
-    $('#canjeForm')[0].reset();
-    
-    // Configurar por defecto a Boleta Electrónica
-    $('#canje_tipo_compro').val('41').trigger('change');
-    $('#canjeModal').modal('show');
+/* ── PASO 1: Modal de selección de productos a canjear ────────────────── */
+async function openCanjeProductosModal(idMovVnt) {
+    canjeCurrentIdMovVnt = idMovVnt;
+    canjeProductosData = [];
+    canjeSelectedMovarts = [];
+    canjeSelectedTotal = 0;
+
+    // Mostrar loading, ocultar contenido
+    $('#canjeProductosLoading').show();
+    $('#canjeProductosContent').hide();
+    $('#canjeProductosTbody').empty();
+    $('#btnSiguienteCanje').prop('disabled', true);
+    $('#chkSelectAllCanje').prop('checked', false);
+
+    $('#canjeProductosModal').modal('show');
+
+    try {
+        const response = await fetch('get_detalle_nv_ajax.jsp?id_mov_vnt=' + encodeURIComponent(idMovVnt));
+        const data = await response.json();
+
+        $('#canjeProductosLoading').hide();
+
+        if (!data.ok || !data.items || data.items.length === 0) {
+            $('#canjeProductosContent').show();
+            $('#canjeProductosTbody').html(
+                '<tr><td colspan="6" class="text-center text-muted py-3">' +
+                '<i class="fas fa-inbox mr-1"></i> No se encontraron productos en esta nota de venta.</td></tr>'
+            );
+            return;
+        }
+
+        canjeProductosData = data.items;
+        let html = '';
+        let hasPendientes = false;
+
+        data.items.forEach(function(item, idx) {
+            const num = idx + 1;
+            const esCanjeado = item.canjeado;
+            const totalFmt = parseFloat(item.total).toFixed(2);
+
+            if (esCanjeado) {
+                html += '<tr style="background:#f0fdf4; opacity:0.7;">' +
+                    '<td class="text-center"><input type="checkbox" disabled checked style="opacity:0.5;"></td>' +
+                    '<td>' + num + '</td>' +
+                    '<td>' + escapeHtml(item.glosa) + '</td>' +
+                    '<td class="text-center">' + item.cantidad + '</td>' +
+                    '<td class="text-right">S/ ' + totalFmt + '</td>' +
+                    '<td class="text-center"><span class="badge badge-success px-2 py-1" style="font-size:9px;"><i class="fas fa-check mr-1"></i>Canjeado</span></td>' +
+                    '</tr>';
+            } else {
+                hasPendientes = true;
+                html += '<tr>' +
+                    '<td class="text-center"><input type="checkbox" class="chk-canje-prod" data-idx="' + idx + '" data-movart="' + item.id_movart + '" data-total="' + item.total + '"></td>' +
+                    '<td><strong>' + num + '</strong></td>' +
+                    '<td>' + escapeHtml(item.glosa) + '</td>' +
+                    '<td class="text-center"><strong>' + item.cantidad + '</strong></td>' +
+                    '<td class="text-right"><strong>S/ ' + totalFmt + '</strong></td>' +
+                    '<td class="text-center"><span class="badge badge-light px-2 py-1" style="font-size:9px; color:#64748b; border:1px solid #cbd5e1;"><i class="fas fa-clock mr-1"></i>Pendiente</span></td>' +
+                    '</tr>';
+            }
+        });
+
+        $('#canjeProductosTbody').html(html);
+        $('#canjeProductosContent').show();
+
+        // Bind checkbox events
+        bindCanjeCheckboxEvents();
+
+        if (!hasPendientes) {
+            $('#btnSiguienteCanje').prop('disabled', true).text('Todos los productos ya fueron canjeados');
+        }
+
+    } catch (err) {
+        $('#canjeProductosLoading').hide();
+        $('#canjeProductosContent').show();
+        $('#canjeProductosTbody').html(
+            '<tr><td colspan="6" class="text-center text-danger py-3">' +
+            '<i class="fas fa-exclamation-circle mr-1"></i> Error al cargar los productos.</td></tr>'
+        );
+    }
 }
 
-// Escuchar cambios en el selector de tipo de comprobante en el modal
+function bindCanjeCheckboxEvents() {
+    // Individual checkboxes
+    $(document).off('change', '.chk-canje-prod').on('change', '.chk-canje-prod', function() {
+        actualizarResumenCanje();
+    });
+
+    // Select all
+    $('#chkSelectAllCanje').off('change').on('change', function() {
+        const checked = $(this).is(':checked');
+        $('.chk-canje-prod').prop('checked', checked);
+        actualizarResumenCanje();
+    });
+}
+
+function actualizarResumenCanje() {
+    canjeSelectedMovarts = [];
+    canjeSelectedTotal = 0;
+    let count = 0;
+
+    $('.chk-canje-prod:checked').each(function() {
+        canjeSelectedMovarts.push($(this).data('movart'));
+        canjeSelectedTotal += parseFloat($(this).data('total')) || 0;
+        count++;
+    });
+
+    const totalPendientes = $('.chk-canje-prod').length;
+    $('#canjeProductosResumen').text(count + ' de ' + totalPendientes + ' seleccionado' + (count !== 1 ? 's' : ''));
+    $('#canjeProductosTotalSel').text('S/ ' + canjeSelectedTotal.toFixed(2));
+    $('#btnSiguienteCanje').prop('disabled', count === 0);
+
+    // Update select all state
+    $('#chkSelectAllCanje').prop('checked', count === totalPendientes && totalPendientes > 0);
+}
+
+/* ── Pasar al PASO 2: Datos del cliente ────────────────────────────────── */
+function siguienteCanjeCliente() {
+    if (canjeSelectedMovarts.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sin Selección',
+            text: 'Por favor seleccione al menos un producto para canjear.'
+        });
+        return;
+    }
+
+    // Cerrar modal paso 1
+    $('#canjeProductosModal').modal('hide');
+
+    // Configurar modal paso 2
+    $('#canje_id_mov_vnt').val(canjeCurrentIdMovVnt);
+    $('#canje_id_movarts').val(canjeSelectedMovarts.join(','));
+    $('#canjeResumenProductos').text(
+        canjeSelectedMovarts.length + ' producto' + (canjeSelectedMovarts.length !== 1 ? 's' : '') + 
+        ' — S/ ' + canjeSelectedTotal.toFixed(2)
+    );
+
+    // Reset form fields (but keep hidden inputs)
+    $('#canje_tipo_compro').val('41').trigger('change');
+    $('#canje_dni').val('');
+    $('#canje_nombre').val('');
+    $('#canje_apepat').val('');
+    $('#canje_apemat').val('');
+    $('#canje_sexo').val('');
+    $('#canje_razon_social').val('');
+    $('#canje_direccion').val('');
+
+    setTimeout(function() {
+        $('#canjeModal').modal('show');
+    }, 300);
+}
+
+/* ── Volver al paso 1 desde el paso 2 ──────────────────────────────────── */
+function volverAProductos() {
+    $('#canjeModal').modal('hide');
+    setTimeout(function() {
+        $('#canjeProductosModal').modal('show');
+    }, 300);
+}
+
+/* ── Escuchar cambios en el selector de tipo de comprobante en el modal ── */
 $(document).on('change', '#canje_tipo_compro', function() {
     const tipo = $(this).val();
     if (tipo === '41') {
@@ -154,6 +311,7 @@ async function procesarCanje(event) {
     event.preventDefault();
     
     const idMovVnt = $('#canje_id_mov_vnt').val();
+    const idMovarts = $('#canje_id_movarts').val();
     const tipoCompro = $('#canje_tipo_compro').val();
     const docNum = $('#canje_dni').val().trim();
     const direccion = $('#canje_direccion').val().trim();
@@ -168,8 +326,18 @@ async function procesarCanje(event) {
         return;
     }
 
+    if (!idMovarts) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sin Productos',
+            text: 'No se seleccionaron productos para canjear. Vuelva al paso anterior.'
+        });
+        return;
+    }
+
     const formData = new URLSearchParams();
     formData.append('id_mov_vnt', idMovVnt);
+    formData.append('id_movarts', idMovarts);
     formData.append('tipo_comprobante', tipoCompro);
     formData.append('doc_num', docNum);
     formData.append('direccion', direccion);
@@ -216,7 +384,7 @@ async function procesarCanje(event) {
     const comproName = isBoleta ? 'Boleta' : 'Factura';
     Swal.fire({
         title: 'Generando ' + comproName + '...',
-        text: 'Procesando el canje de la Nota de Venta...',
+        text: 'Procesando el canje de ' + canjeSelectedMovarts.length + ' producto(s)...',
         allowOutsideClick: false,
         didOpen: () => {
             Swal.showLoading();
@@ -241,8 +409,9 @@ async function procesarCanje(event) {
             Swal.fire({
                 icon: 'success',
                 title: '¡Comprobante Generado!',
-                text: 'La ' + comproName + ' Electrónica ' + data.serie + '-' + data.numero + ' fue generada exitosamente.',
-                confirmButtonText: 'Ver Comprobante'
+                html: '<p>La ' + comproName + ' Electrónica <strong>' + data.serie + '-' + data.numero + '</strong> fue generada exitosamente.</p>' +
+                      '<p class="text-muted" style="font-size:12px;">Productos canjeados: ' + canjeSelectedMovarts.length + '</p>',
+                confirmButtonText: 'Actualizar Página'
             }).then((result) => {
                 document.datos.submit();
             });
@@ -261,4 +430,11 @@ async function procesarCanje(event) {
             text: 'Ocurrió un error en el servidor al intentar canjear la Nota de Venta.'
         });
     }
+}
+
+/* ── Utilidad: escape HTML ─────────────────────────────────────────────── */
+function escapeHtml(text) {
+    if (!text) return '';
+    var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }

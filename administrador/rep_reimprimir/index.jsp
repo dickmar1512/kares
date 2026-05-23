@@ -156,22 +156,57 @@
                                         </span>
                                         <% if("34".equals(s_tipo_doc)) { 
                                                 String refObs = rset.getString("ref_obs");
-                                                String refDoc = rset.getString("ref_doc");
-                                                String idVntRef = rset.getString("id_vnt_ref");
-                                                String refMotivo = rset.getString("ref_motivo");
-                                                if ("CANJEADO".equalsIgnoreCase(refObs)) {
-                                                    String refUrl = "39".equals(refMotivo) ? "print_factura_electronica_pdf.jsp" : "print_boleta_electronica_pdf.jsp";
-                                                    String refNom = "39".equals(refMotivo) ? "Factura" : "Boleta";
+                                                String currentIdMovVnt = rset.getString("id_mov_vnt");
+                                                
+                                                // Consultar estado de canje a nivel de detalle
+                                                int totalDet = 0;
+                                                int canjeadosDet = 0;
+                                                PreparedStatement pstmtDet = null;
+                                                ResultSet rsetDet = null;
+                                                try {
+                                                    pstmtDet = conn.prepareStatement(
+                                                        "SELECT COUNT(*) AS total_det, " +
+                                                        "SUM(CASE WHEN IFNULL(det_transf,'') <> '' THEN 1 ELSE 0 END) AS canjeados_det " +
+                                                        "FROM vent_regdet WHERE id_mov_vnt = ? AND estado <> 'X'");
+                                                    pstmtDet.setString(1, currentIdMovVnt);
+                                                    rsetDet = pstmtDet.executeQuery();
+                                                    if (rsetDet.next()) {
+                                                        totalDet = rsetDet.getInt("total_det");
+                                                        canjeadosDet = rsetDet.getInt("canjeados_det");
+                                                    }
+                                                } finally {
+                                                    if (rsetDet != null) try { rsetDet.close(); } catch(Exception ex) {}
+                                                    if (pstmtDet != null) try { pstmtDet.close(); } catch(Exception ex) {}
+                                                }
+                                                
+                                                int pendientesDet = totalDet - canjeadosDet;
+                                                
+                                                if (canjeadosDet > 0 && pendientesDet == 0) {
+                                                    // TODOS canjeados
                                          %>
                                                     <span class="badge badge-success ml-2 px-2 py-1" style="font-size:10px; font-weight:700;" title="Nota de Venta Canjeada">
-                                                        <i class="fas fa-check-circle mr-1"></i> <%=refNom%>: 
-                                                        <a href="javascript:void(0);" onclick="openPDFModal('<%=idVntRef%>', '<%=refUrl%>')" class="text-white font-weight-bold" style="text-decoration: underline;"><%=refDoc%></a>
+                                                        <i class="fas fa-check-circle mr-1"></i> CANJEADO (<%=canjeadosDet%>/<%=totalDet%>)
                                                     </span>
-                                         <%     } else { %>
+                                         <%     } else if (canjeadosDet > 0 && pendientesDet > 0) {
+                                                    // PARCIALMENTE canjeado
+                                         %>
+                                                    <span class="badge badge-warning ml-2 px-2 py-1" style="font-size:10px; font-weight:700; color:#744210;" title="Canje Parcial: <%=canjeadosDet%> de <%=totalDet%> productos canjeados">
+                                                        <i class="fas fa-exclamation-circle mr-1"></i> PARCIAL (<%=canjeadosDet%>/<%=totalDet%>)
+                                                    </span>
+                                                    <button type="button" 
+                                                            class="btn btn-xs btn-outline-success ml-1 px-2 py-0" 
+                                                            style="font-size:10px; font-weight:700;"
+                                                            onclick="openCanjeProductosModal('<%=currentIdMovVnt%>')"
+                                                            title="Canjear productos restantes">
+                                                        <i class="fas fa-file-invoice"></i> Canjear Restantes
+                                                    </button>
+                                         <%     } else {
+                                                    // NINGUNO canjeado
+                                         %>
                                                     <button type="button" 
                                                             class="btn btn-xs btn-outline-success ml-2 px-2 py-0" 
                                                             style="font-size:10px; font-weight:700;"
-                                                            onclick="openGenerateModal('<%=rset.getString("id_mov_vnt")%>')"
+                                                            onclick="openCanjeProductosModal('<%=currentIdMovVnt%>')"
                                                             title="Canjear por Comprobante Electrónico">
                                                         <i class="fas fa-file-invoice"></i> Canjear
                                                     </button>
@@ -254,14 +289,77 @@
     </div>
 </div>
 
-<!-- ══ MODAL DE CANJE (GENERAR BOLETA O FACTURA) ════════════════════════════ -->
+<!-- ══ MODAL PASO 1: SELECCIÓN DE PRODUCTOS A CANJEAR ═══════════════════════ -->
+<div class="modal fade" id="canjeProductosModal" tabindex="-1" aria-labelledby="canjeProductosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius:6px; overflow:hidden; border:none; box-shadow: 0 10px 25px rgba(0,0,0,.2);">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1e40af,#3b82f6); color:#fff; border-bottom:none; padding:12px 20px;">
+                <h5 class="modal-title font-weight-bold" id="canjeProductosModalLabel" style="font-size:15px;">
+                    <i class="fas fa-boxes mr-2"></i>
+                    Paso 1: Seleccione los Productos a Canjear
+                </h5>
+                <button type="button" class="close text-white ml-auto" data-dismiss="modal" aria-label="Cerrar" style="opacity:.9; outline:none;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0" style="background:#f8fafc;">
+                <!-- Loading -->
+                <div id="canjeProductosLoading" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p class="mt-2 mb-0 text-muted">Cargando productos...</p>
+                </div>
+                <!-- Tabla de productos -->
+                <div id="canjeProductosContent" style="display:none;">
+                    <div class="px-3 pt-3 pb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted"><i class="fas fa-info-circle mr-1"></i> Seleccione los productos que desea incluir en el comprobante</small>
+                            <span id="canjeProductosResumen" class="badge badge-primary px-2 py-1" style="font-size:11px;">0 seleccionados</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height:350px; overflow-y:auto;">
+                        <table class="table table-sm table-hover mb-0" id="tablaCanjeProductos">
+                            <thead style="background:#e2e8f0; position:sticky; top:0; z-index:1;">
+                                <tr>
+                                    <th style="width:40px; text-align:center;"><input type="checkbox" id="chkSelectAllCanje" title="Seleccionar todos"></th>
+                                    <th style="width:35px">#</th>
+                                    <th>Producto</th>
+                                    <th style="width:60px; text-align:center;">Cant.</th>
+                                    <th style="width:90px; text-align:right;">Total</th>
+                                    <th style="width:90px; text-align:center;">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="canjeProductosTbody"></tbody>
+                            <tfoot>
+                                <tr style="background:#f1f5f9; font-weight:700;">
+                                    <td colspan="4" class="text-right" style="font-size:12px;">TOTAL SELECCIONADO:</td>
+                                    <td class="text-right" style="font-size:13px; color:#16a34a;" id="canjeProductosTotalSel">S/ 0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#f1f5f9; border-top:1px solid #e2e8f0; padding:12px 20px;">
+                <button type="button" class="btn btn-sm btn-secondary font-weight-bold px-3" data-dismiss="modal" style="border-radius:4px;">
+                    <i class="fas fa-times mr-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-sm btn-primary font-weight-bold px-4" id="btnSiguienteCanje" onclick="siguienteCanjeCliente()" disabled style="border-radius:4px;">
+                    <i class="fas fa-arrow-right mr-1"></i>Siguiente: Datos del Cliente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL PASO 2: DATOS DEL CLIENTE (GENERAR BOLETA O FACTURA) ═══════════ -->
 <div class="modal fade" id="canjeModal" tabindex="-1" aria-labelledby="canjeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:6px; overflow:hidden; border:none; box-shadow: 0 10px 25px rgba(0,0,0,.2);">
             <div class="modal-header bg-success text-white" style="border-bottom:none; padding:12px 20px;">
                 <h5 class="modal-title font-weight-bold" id="canjeModalLabel" style="font-size:15px;">
                     <i class="fas fa-file-invoice mr-2"></i>
-                    Canjear por Comprobante Electrónico
+                    Paso 2: Datos del Comprobante Electrónico
                 </h5>
                 <button type="button" class="close text-white ml-auto" data-dismiss="modal" aria-label="Cerrar" style="opacity:.9; outline:none;">
                     <span aria-hidden="true">&times;</span>
@@ -269,7 +367,13 @@
             </div>
             <form id="canjeForm" onsubmit="procesarCanje(event)">
                 <input type="hidden" id="canje_id_mov_vnt" name="id_mov_vnt">
+                <input type="hidden" id="canje_id_movarts" name="id_movarts">
                 <div class="modal-body p-4" style="background:#f8fafc;">
+                    <!-- Resumen de productos seleccionados -->
+                    <div class="mb-3 p-2" style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:6px;">
+                        <small class="text-muted d-block" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Productos Seleccionados</small>
+                        <span id="canjeResumenProductos" class="font-weight-bold" style="font-size:13px; color:#1e40af;">0 productos — S/ 0.00</span>
+                    </div>
                     <div class="row">
                         <!-- Selector de Comprobante -->
                         <div class="col-md-12 mb-3">
@@ -329,6 +433,9 @@
                     </div>
                 </div>
                 <div class="modal-footer" style="background:#f1f5f9; border-top:1px solid #e2e8f0; padding:12px 20px;">
+                    <button type="button" class="btn btn-sm btn-outline-primary font-weight-bold px-3" onclick="volverAProductos()" style="border-radius:4px;">
+                        <i class="fas fa-arrow-left mr-1"></i>Volver
+                    </button>
                     <button type="button" class="btn btn-sm btn-secondary font-weight-bold px-3" data-dismiss="modal" style="border-radius:4px;">
                         <i class="fas fa-times mr-1"></i>Cancelar
                     </button>

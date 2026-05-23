@@ -7,11 +7,13 @@
     response.setCharacterEncoding("UTF-8");
 
     String s_id_mov_vnt     = request.getParameter("id_mov_vnt");
+    String s_id_movarts     = request.getParameter("id_movarts");
     String s_tipo_compro    = request.getParameter("tipo_comprobante"); // '41' (Boleta) o '39' (Factura)
     String s_doc_num        = request.getParameter("doc_num"); // DNI o RUC
     String s_direccion      = request.getParameter("direccion");
 
     if (s_id_mov_vnt == null || s_id_mov_vnt.isEmpty() ||
+        s_id_movarts == null || s_id_movarts.isEmpty() ||
         s_tipo_compro == null || s_tipo_compro.isEmpty() ||
         s_doc_num == null || s_doc_num.isEmpty()) {
         
@@ -79,7 +81,7 @@
                 // Registrar nuevo cliente
                 s_id_personal = System.currentTimeMillis() + "";
                 String sqlInsertPers = "INSERT INTO datos_personales (id_personal, nombre, apepat, apemat, ver_nombre, ver_apepat, ver_apemat, sexo, tipdoc, numdoc, direcc, estado, fecha_ing, ID_PERSONAL_USER) " +
-                                       "VALUES (?, upper(?), upper(?), upper(?), upper(?), upper(?), upper(?), ?, '1', ?, ?, '1', now(), ?)";
+                                       "VALUES (?, upper(?), upper(?), upper(?), upper(?), upper(?), upper(?), ?, 'D', ?, ?, '1', now(), ?)";
                 pstmt = conn.prepareStatement(sqlInsertPers);
                 pstmt.setString(1, s_id_personal);
                 pstmt.setString(2, s_nombre);
@@ -231,6 +233,27 @@
             throw new Exception("No se encontró la Nota de Venta original o ya no está disponible.");
         }
         cerrar(rset, pstmt, null);
+        
+        // 3.1. Calcular totales SÓLO para los productos seleccionados
+        String sqlGetSums = "SELECT SUM(valor_venta) as sum_vv, SUM(base_imp) as sum_bi, SUM(total) as sum_tot, " +
+                            "SUM(descuento) as sum_dsc, SUM(descuento_esp) as sum_dsce, SUM(cobertura) as sum_cob, " +
+                            "SUM(igv) as sum_igv, SUM(copago) as sum_cop " +
+                            "FROM vent_regdet WHERE id_mov_vnt = ? AND FIND_IN_SET(id_movart, ?) > 0";
+        pstmt = conn.prepareStatement(sqlGetSums);
+        pstmt.setString(1, s_id_mov_vnt);
+        pstmt.setString(2, s_id_movarts);
+        rset = pstmt.executeQuery();
+        if (rset.next()) {
+            d_valor_venta = rset.getDouble("sum_vv");
+            d_base_imp = rset.getDouble("sum_bi");
+            d_total = rset.getDouble("sum_tot");
+            d_descuento = rset.getDouble("sum_dsc");
+            d_descuento_esp = rset.getDouble("sum_dsce");
+            d_cobertura = rset.getDouble("sum_cob");
+            d_igv = rset.getDouble("sum_igv");
+            d_copago = rset.getDouble("sum_cop");
+        }
+        cerrar(rset, pstmt, null);
 
         if (s_id_cont == null || s_id_cont.isEmpty()) {
             s_id_cont = new java.text.SimpleDateFormat("yyyy").format(new java.util.Date());
@@ -299,17 +322,40 @@
         // 5. Clonar las filas de detalle en vent_regdet asociándolas al nuevo id_mov_vnt del Comprobante
         String sqlInsertDet = "INSERT INTO vent_regdet (id_venta, id_mov_vnt, id_movart, id_articulo, glosa, cantidad, valor_af, valor_inaf, valor_venta, descuento, descuento_esp, cobertura, base_imp, igv, total, copago, copago_fact, tipo_copago, copago_orig, fecha, id_medico_ser, id_cita, estado, estado_atencion, id_sol_det, pago_hono, coberturado, id_personal_user, user_upd, id_cuenta_alm, id_cuenta_cv, impo_liq, centro_costo, id_mov_hon, agregar_igv, id_paquete, modo_det, id_presupuesto, cambia_precio, id_autoriza_desc, id_medico_rec, consultorio, ret_hono, id_user_anul, fecanu, prioridad, muestra, equipo, dscto_pac, id_examen, tipo_serv, motivo_modif, respuesta, id_personal_temp, id_plan_temp, id_tipo_ate_temp, id_serv_fij_temp, motivo_anul, id_personal_dig, fecha_desc, det_transf, id_liq, id_pendiente, id_vnt_pendiente, nivel2, nivel1, nivel_impresion, precio_unitario, porc_igv, id_pol_copago, id_pol_cob, id_almart, porc_dsc, porc_cob, tipo_precio, porc_utilidad, utilidad, cu, x, id_personal_cambio, motivo_cambio, id_medico_ant, orden, traspaso, user_traspaso, fecha_traspaso, cortesia, devuelto_hosp, sf, p_cirugia, importe_asistencia, fecha_upd, fecha_activ, user_activ, motivo_activ, porc_polcob, porc_param, id_param, inafecto, vv2, sist_recep, det_transf2, copago_con_igv, activa_serv_user, activa_serv_fecha, id_movart_relacion, id_mov_det, gen_labo, hora_examen, examen_pend, receta, oculto, ip_anul, chkmedso, chk_id_user, copago_corregido) " +
                               "SELECT id_venta, ?, substring(md5(concat(?, id_movart)), 1, 20), id_articulo, glosa, cantidad, valor_af, valor_inaf, valor_venta, descuento, descuento_esp, cobertura, base_imp, igv, total, copago, copago_fact, tipo_copago, copago_orig, now(), id_medico_ser, id_cita, estado, estado_atencion, id_sol_det, pago_hono, coberturado, ?, user_upd, id_cuenta_alm, id_cuenta_cv, impo_liq, centro_costo, id_mov_hon, agregar_igv, id_paquete, modo_det, id_presupuesto, cambia_precio, id_autoriza_desc, id_medico_rec, consultorio, ret_hono, id_user_anul, fecanu, prioridad, muestra, equipo, dscto_pac, id_examen, tipo_serv, motivo_modif, respuesta, id_personal_temp, id_plan_temp, id_tipo_ate_temp, id_serv_fij_temp, motivo_anul, id_personal_dig, fecha_desc, det_transf, id_liq, id_pendiente, id_vnt_pendiente, nivel2, nivel1, nivel_impresion, precio_unitario, porc_igv, id_pol_copago, id_pol_cob, id_almart, porc_dsc, porc_cob, tipo_precio, porc_utilidad, utilidad, cu, x, id_personal_cambio, motivo_cambio, id_medico_ant, orden, traspaso, user_traspaso, fecha_traspaso, cortesia, devuelto_hosp, sf, p_cirugia, importe_asistencia, fecha_upd, fecha_activ, user_activ, motivo_activ, porc_polcob, porc_param, id_param, inafecto, vv2, sist_recep, det_transf2, copago_con_igv, activa_serv_user, activa_serv_fecha, id_movart, id_mov_det, gen_labo, hora_examen, examen_pend, receta, oculto, ip_anul, chkmedso, chk_id_user, copago_corregido " +
-                              "FROM vent_regdet WHERE id_mov_vnt = ?";
+                              "FROM vent_regdet WHERE id_mov_vnt = ? AND FIND_IN_SET(id_movart, ?) > 0";
         pstmt = conn.prepareStatement(sqlInsertDet);
         pstmt.setString(1, s_new_id_mov_vnt);
         pstmt.setString(2, s_new_id_mov_vnt);
         pstmt.setString(3, id_personal_user);
         pstmt.setString(4, s_id_mov_vnt);
+        pstmt.setString(5, s_id_movarts);
+        pstmt.executeUpdate();
+        pstmt.close();
+        
+        // 5.1. Marcar los productos originales como canjeados
+        String sqlUpdateDetOrig = "UPDATE vent_regdet SET det_transf = ? WHERE id_mov_vnt = ? AND FIND_IN_SET(id_movart, ?) > 0";
+        pstmt = conn.prepareStatement(sqlUpdateDetOrig);
+        pstmt.setString(1, s_new_id_mov_vnt);
+        pstmt.setString(2, s_id_mov_vnt);
+        pstmt.setString(3, s_id_movarts);
         pstmt.executeUpdate();
         pstmt.close();
 
-        // 6. Actualizar la Nota de Venta original en vent_registro con la referencia de canje
-        String sqlUpdateReg = "UPDATE vent_registro SET id_vnt_ref = ?, ref_doc = ?, ref_obs = 'CANJEADO', ref_motivo = ? WHERE id_mov_vnt = ? AND tipo_doc = '34'";
+        // 6. Verificar si quedan productos pendientes para determinar el estado de la Nota de Venta
+        int countPendientes = 0;
+        String sqlCheckPend = "SELECT COUNT(*) AS pend FROM vent_regdet WHERE id_mov_vnt = ? AND estado <> 'X' AND (det_transf IS NULL OR det_transf = '')";
+        pstmt = conn.prepareStatement(sqlCheckPend);
+        pstmt.setString(1, s_id_mov_vnt);
+        rset = pstmt.executeQuery();
+        if (rset.next()) {
+            countPendientes = rset.getInt("pend");
+        }
+        cerrar(rset, pstmt, null);
+        
+        String nuevoRefObs = (countPendientes == 0) ? "CANJEADO" : "CANJEADO PARCIAL";
+
+        // 6.1. Actualizar la Nota de Venta original en vent_registro con la referencia de canje
+        String sqlUpdateReg = "UPDATE vent_registro SET id_vnt_ref = ?, ref_doc = ?, ref_obs = ?, ref_motivo = ? WHERE id_mov_vnt = ? AND tipo_doc = '34'";
         pstmt = conn.prepareStatement(sqlUpdateReg);
         pstmt.setString(1, s_new_id_mov_vnt); // id_vnt_ref apunta al nuevo Comprobante
         
@@ -320,8 +366,9 @@
             comproDocFormatted = next_serie + "-" + next_numero;
         }
         pstmt.setString(2, comproDocFormatted); // ref_doc apunta al número de Boleta/Factura generada
-        pstmt.setString(3, s_tipo_compro); // Guardamos si es Boleta (41) o Factura (39) en ref_motivo para saber el tipo de destino
-        pstmt.setString(4, s_id_mov_vnt);
+        pstmt.setString(3, nuevoRefObs); // CANJEADO o CANJEADO PARCIAL
+        pstmt.setString(4, s_tipo_compro); // Guardamos si es Boleta (41) o Factura (39) en ref_motivo para saber el tipo de destino
+        pstmt.setString(5, s_id_mov_vnt);
         int rowsUpdated = pstmt.executeUpdate();
         pstmt.close();
 
