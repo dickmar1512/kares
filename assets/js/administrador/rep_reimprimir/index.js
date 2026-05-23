@@ -103,7 +103,7 @@ async function openCanjeProductosModal(idMovVnt) {
                     '<td>' + escapeHtml(item.glosa) + '</td>' +
                     '<td class="text-center"><strong>' + item.cantidad + '</strong></td>' +
                     '<td class="text-right"><strong>S/ ' + totalFmt + '</strong></td>' +
-                    '<td class="text-center"><span class="badge badge-light px-2 py-1" style="font-size:9px; color:#64748b; border:1px solid #cbd5e1;"><i class="fas fa-clock mr-1"></i>Pendiente</span></td>' +
+                    '<td class="text-center"><span class="badge badge-light px-2 py-1" style="font-size:9px; color:#64748b; border:1px solid #cbd5e1;"><i class="fas fa-clock mr-1"></i>Pendiente Canje</span></td>' +
                     '</tr>';
             }
         });
