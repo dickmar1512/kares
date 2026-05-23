@@ -37,9 +37,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Reimpresión de Comprobantes</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- AdminLTE 3 + Bootstrap 4 -->
     <link rel="stylesheet" href="../../assets/plugins/adminlte3/css/adminlte.min.css">
+    <link rel="stylesheet" href="../../assets/plugins/fontawesome6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../assets/css/kares-grid.css">
     <link rel="stylesheet" href="../../assets/css/administrador/rep_reimprimir/index.css">
 </head>
