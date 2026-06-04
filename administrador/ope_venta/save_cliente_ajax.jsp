@@ -39,7 +39,7 @@
     if (telefono == null) telefono = "";
     if (correo == null) correo = "";
 
-    if (tipdoc.equals("1")) {
+    if (tipdoc.equals("D")) {
         // DNI
         if (numdoc.length() != 8) {
             jsonRes.put("success", false);
@@ -67,8 +67,8 @@
             out.print(jsonRes.toString());
             return;
         }
-        apepat = "-";
-        apemat = "-";
+        apepat = "";
+        apemat = "";
         sexo = "";
     } else {
         jsonRes.put("success", false);
@@ -103,8 +103,8 @@
         String s_id_personal = System.currentTimeMillis() + "";
 
         // Insertar cliente
-        String sqlInsert = "INSERT INTO datos_personales (id_personal, nombre, apepat, apemat, ver_nombre, ver_apepat, ver_apemat, sexo, tipdoc, numdoc, direcc, fono1, email, estado, fecha_ing, ID_PERSONAL_USER) " +
-                           "VALUES (?, upper(?), upper(?), upper(?), upper(?), upper(?), upper(?), ?, ?, ?, ?, ?, ?, '1', now(), ?)";
+        String sqlInsert = "INSERT INTO datos_personales (id_personal, nombre, apepat, apemat, ver_nombre, ver_apepat, ver_apemat, sexo, tipdoc, numdoc, direcc, fono1, email, estado, fecha_ing, ID_PERSONAL_USER, RUC) " +
+                           "VALUES (?, upper(?), upper(?), upper(?), upper(?), upper(?), upper(?), ?, ?, ?, ?, ?, ?, '1', now(), ?,?)";
         pstmt = conn.prepareStatement(sqlInsert);
         pstmt.setString(1, s_id_personal);
         pstmt.setString(2, nombre);
@@ -120,6 +120,7 @@
         pstmt.setString(12, telefono);
         pstmt.setString(13, correo);
         pstmt.setString(14, id_personal_user);
+        pstmt.setString(15, numdoc);
 
         int rows = pstmt.executeUpdate();
         if (rows > 0) {
