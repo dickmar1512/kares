@@ -23,46 +23,56 @@
 <%@ include file="../seguro.jsp" %>
 
 <%
-    // Obtener el parámetro id_venta desde la URL
-    String f_id_mov_vnt = request.getParameter("f_id_mov_vnt");
-
-    // Variables para almacenar datos de la venta
-    String x_fec = "";
-    String comprobante = "";
-    String s_mesa = "";
-    Double sumbi = 0.0;
-    Double sumtot = 0.0;
-    String total_letras = "";
-    String x_log_caj = "";
-    String s_razon = "";
-    String p_ruc = "";
-    String p_dirruc = "";
-    String id_mov_vnt_value = "";
-    String p_formaPago = "CONTADO";
-
-    // Ruta de la imagen del logo
-    //String imagePath = application.getRealPath("/assets/images/logo.png");
-    String imagePath = application.getRealPath("/assets/images/logo2.png");    
+    // Limpiar el buffer y configurar la respuesta ANTES de cualquier salida
+    response.reset();
+    response.setContentType("application/pdf");
+    response.setHeader("Content-Disposition", "inline; filename=factura.pdf");
 
     try {
+        // Obtener el parámetro id_venta desde la URL
+        String f_id_mov_vnt = request.getParameter("f_id_mov_vnt");
+        
+        // Validar que el parámetro no sea nulo
+        if (f_id_mov_vnt == null || f_id_mov_vnt.trim().isEmpty()) {
+            throw new IllegalArgumentException("ID de venta no proporcionado");
+        }
+
+        // Variables para almacenar datos de la venta
+        String x_fec = "";
+        String comprobante = "";
+        String s_mesa = "";
+        Double sumbi = 0.0;
+        Double sumtot = 0.0;
+        String total_letras = "";
+        String x_log_caj = "";
+        String s_razon = "";
+        String p_ruc = "";
+        String p_dirruc = "";
+        String id_mov_vnt_value = "";
+        String p_formaPago = "CONTADO";
+
+        // Ruta de la imagen del logo
+        String imagePath = application.getRealPath("/assets/images/logo2.png");
+
         // Consultar la venta principal
-        COMANDO = "select id_mov_vnt, " +
-                  "upper(razon) razon, " +
-                  "ruc, " +
-                  "direcruc(ruc) dirruc, " +
-                  "date_format(fecha,'%d/%m/%Y %H:%i') fecha, " +
-                  "concat(serie,'-',lpad(numdoc,7,0)) doc, " +
-                  "valor_venta as vv, " +
-                  "base_imp as bi, " +
-                  "descuento, " +
-                  "ifnull(id_mesa,'') as mesa, " +
-                  "login(id_personal_user) log_caj, " +
-                  "total " +
-                  "from vent_registro " +
-                  "where id_mov_vnt ='" + f_id_mov_vnt + "'";
-        conn = getConexion(); 
-        pstmt = conn.prepareStatement(COMANDO);  
-        rset = pstmt.executeQuery(); 
+        String COMANDO = "select id_mov_vnt, " +
+                "upper(razon) razon, " +
+                "ruc, " +
+                "direcruc(ruc) dirruc, " +
+                "date_format(fecha,'%d/%m/%Y %H:%i') fecha, " +
+                "concat(serie,'-',lpad(numdoc,7,0)) doc, " +
+                "valor_venta as vv, " +
+                "base_imp as bi, " +
+                "descuento, " +
+                "ifnull(id_mesa,'') as mesa, " +
+                "login(id_personal_user) log_caj, " +
+                "total " +
+                "from vent_registro " +
+                "where id_mov_vnt ='" + f_id_mov_vnt + "'";
+        
+        Connection conn = getConexion();
+        PreparedStatement pstmt = conn.prepareStatement(COMANDO);
+        ResultSet rset = pstmt.executeQuery();
 
         if (rset.next()) {
             sumbi = rset.getDouble("bi");
@@ -76,24 +86,29 @@
             p_dirruc = rset.getString("dirruc");
             id_mov_vnt_value = rset.getString("id_mov_vnt");
 
-            // Configurar el PDF con tamaño personalizado (80mm x altura dinámica)
-            float width = 226.77f; // 80mm en puntos
-            
+            // Validar valores null y asignar valores por defecto
+            if (comprobante == null) comprobante = "";
+            if (x_fec == null) x_fec = "";
+            if (s_mesa == null) s_mesa = "";
+            if (x_log_caj == null) x_log_caj = "";
+            if (s_razon == null) s_razon = "";
+            if (p_ruc == null) p_ruc = "";
+            if (p_dirruc == null) p_dirruc = "";
+            if (id_mov_vnt_value == null) id_mov_vnt_value = "";
+
             // Calcular cantidad de items para altura dinámica
             int cantItems = 0;
             PreparedStatement pstmtCant = conn.prepareStatement("SELECT COUNT(*) as cant FROM vent_regdet WHERE id_mov_vnt = ? AND estado <> 'X'");
             pstmtCant.setString(1, f_id_mov_vnt);
             ResultSet rsCant = pstmtCant.executeQuery();
             if(rsCant.next()) cantItems = rsCant.getInt("cant");
-            cerrar(rsCant, pstmtCant, null);
+            rsCant.close();
+            pstmtCant.close();
             
-            float height = 550f + (cantItems * 30f); // Altura dinámica: base + margen por item
-            
-            // Limpiar el buffer y evitar que el JSP escriba contenido HTML
-            response.reset();
-            response.setContentType("application/pdf");
-            response.setHeader("Content-Disposition", "inline; filename=factura_" + f_id_mov_vnt + ".pdf");
+            float width = 226.77f; // 80mm en puntos
+            float height = 550f + (cantItems * 30f);
 
+            // CREAR EL PDF
             PdfWriter writer = new PdfWriter(response.getOutputStream());
             PdfDocument pdfDoc = new PdfDocument(writer);
             pdfDoc.setDefaultPageSize(new PageSize(width, height));
@@ -101,7 +116,13 @@
 
             // Parsear la fecha
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-            Date fechaParsed = dateFormat.parse(x_fec);
+            Date fechaParsed = null;
+            try {
+                fechaParsed = dateFormat.parse(x_fec);
+            } catch (Exception e) {
+                // Si hay error al parsear, usar fecha actual
+                fechaParsed = new Date();
+            }
 
             // Configurar márgenes del documento
             document.setMargins(5, 5, 5, 5);
@@ -114,10 +135,10 @@
                 img.setMarginBottom(9);
                 document.add(img);
             } catch (Exception imgEx) {
-                // Si no se encuentra el logo, no agregar espacio
+                // Si no se encuentra el logo, continuar sin él
             }
 
-            // Información de la empresa
+            // Información de la empresa - Validar que no sean null
             document.add(new Paragraph("INVERSIONES MJGL E.I.R.L")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.CENTER)
                     .setMultipliedLeading(0.5f).setMarginTop(-2).setMarginBottom(1));
@@ -147,29 +168,31 @@
             txtTipoDoc.setBorder(new SolidBorder(1));
             tableDoc.addCell(txtTipoDoc);
 
-            tableDoc.addCell(new Cell().add(new Paragraph(comprobante)
+            // Asegurar que comprobante no sea null
+            String docText = (comprobante != null && !comprobante.isEmpty()) ? comprobante : "N/A";
+            tableDoc.addCell(new Cell().add(new Paragraph(docText)
                     .setBold().setFontSize(8).setTextAlignment(TextAlignment.CENTER)
                     .setMultipliedLeading(0.5f).setMargin(2)));
             document.add(tableDoc);
 
-            // Datos del cliente - FACTURA
+            // Datos del cliente
             document.add(new Paragraph(" "));
-            // Datos del cliente en tabla para evitar solapamientos y mejorar alineación
             float[] colWidths = {75, 145};
             Table clientTable = new Table(colWidths);
             clientTable.setMarginTop(5);
             
+            // Agregar cada celda con validación de null
             clientTable.addCell(new Cell().add(new Paragraph("FECHA EMISION :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
-            clientTable.addCell(new Cell().add(new Paragraph(x_fec).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph((x_fec != null && !x_fec.isEmpty()) ? x_fec : "N/A").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
             
             clientTable.addCell(new Cell().add(new Paragraph("RAZON SOCIAL  :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
-            clientTable.addCell(new Cell().add(new Paragraph(s_razon).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph((s_razon != null && !s_razon.isEmpty()) ? s_razon : "N/A").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
             
             clientTable.addCell(new Cell().add(new Paragraph("RUC                     :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
-            clientTable.addCell(new Cell().add(new Paragraph(p_ruc).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph((p_ruc != null && !p_ruc.isEmpty()) ? p_ruc : "N/A").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
             
             clientTable.addCell(new Cell().add(new Paragraph("DIRECCION         :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
-            clientTable.addCell(new Cell().add(new Paragraph(p_dirruc).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
+            clientTable.addCell(new Cell().add(new Paragraph((p_dirruc != null && !p_dirruc.isEmpty()) ? p_dirruc : "N/A").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
             
             clientTable.addCell(new Cell().add(new Paragraph("FORMA PAGO     :").setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
             clientTable.addCell(new Cell().add(new Paragraph(p_formaPago).setMultipliedLeading(1.0f)).setBold().setFontSize(8).setBorder(Border.NO_BORDER));
@@ -212,25 +235,30 @@
             tableProd.addCell(txtSubtotal);
 
             // Consultar el detalle de la venta
-            COMANDO2 = "Select " +
-                      "cantidad, " +
-                      "glosa, ifnull(presentacion(id_articulo),'') presen, " +
-                      "round(valor_venta*((100+porc_igv)/100),2) as vv, " +
-                      "round((valor_venta*((100+porc_igv)/100))/cantidad,2) as vu, " +
-                      "round(base_imp*((100+porc_igv)/100),2) as bi, " +
-                      "round(ifnull(descuento,0)*((100+porc_igv)/100),2) as dsc, " +
-                      "round(total,2) as tota " +
-                      "from vent_regdet " +
-                      "where id_mov_vnt = '" + id_mov_vnt_value + "' " +
-                      "order by orden ";
-            conn2 = getConexion(); 
-            pstmt2 = conn2.prepareStatement(COMANDO2);  
-            rset2 = pstmt2.executeQuery(); 
+            String COMANDO2 = "Select " +
+                    "cantidad, " +
+                    "glosa, ifnull(presentacion(id_articulo),'') presen, " +
+                    "round(valor_venta*((100+porc_igv)/100),2) as vv, " +
+                    "round((valor_venta*((100+porc_igv)/100))/cantidad,2) as vu, " +
+                    "round(base_imp*((100+porc_igv)/100),2) as bi, " +
+                    "round(ifnull(descuento,0)*((100+porc_igv)/100),2) as dsc, " +
+                    "round(total,2) as tota " +
+                    "from vent_regdet " +
+                    "where id_mov_vnt = '" + id_mov_vnt_value + "' " +
+                    "order by orden ";
+            
+            Connection conn2 = getConexion();
+            PreparedStatement pstmt2 = conn2.prepareStatement(COMANDO2);
+            ResultSet rset2 = pstmt2.executeQuery();
+            
             while (rset2.next()) {
                 int cantidad = rset2.getInt("cantidad");
                 String producto = rset2.getString("glosa");
                 double precio = rset2.getDouble("vu");
                 double subtotal = rset2.getDouble("tota");
+
+                // Validar que producto no sea null
+                if (producto == null) producto = "Sin descripción";
 
                 tableProd.addCell(new Cell().add(new Paragraph(String.valueOf(cantidad))
                         .setFontSize(8).setBold().setTextAlignment(TextAlignment.CENTER)));
@@ -242,23 +270,33 @@
                         .setFontSize(8).setBold().setTextAlignment(TextAlignment.RIGHT)));
             }
             rset2.close();
+            pstmt2.close();
+            conn2.close();
 
             // Añadir la tabla de productos al documento
             document.add(tableProd);
 
             // Obtener total en letras
-            COMANDO3 = "Select numtxt('" + sumtot + "') tota_letra from dual ";
-            conn3 = getConexion();
-            pstmt3 = conn3.prepareStatement(COMANDO3);
-            rset3 = pstmt3.executeQuery();
+            String COMANDO3 = "Select numtxt('" + sumtot + "') tota_letra from dual ";
+            Connection conn3 = getConexion();
+            PreparedStatement pstmt3 = conn3.prepareStatement(COMANDO3);
+            ResultSet rset3 = pstmt3.executeQuery();
             if (rset3.next()) {
-                total_letras = "Son: " + rset3.getString("tota_letra") + " Soles.";
+                String letras = rset3.getString("tota_letra");
+                if (letras != null && !letras.isEmpty()) {
+                    total_letras = "Son: " + letras + " Soles.";
+                } else {
+                    total_letras = "Son: " + String.format("%.2f", sumtot) + " Soles.";
+                }
+            } else {
+                total_letras = "Son: " + String.format("%.2f", sumtot) + " Soles.";
             }
-           
-           cerrar(rset3, pstmt3, conn3);
+            rset3.close();
+            pstmt3.close();
+            conn3.close();
 
-            // Generar código QR - Factura usa código 01
-            String qrText = "20541177281|01|" + comprobante + "|0.00|" + sumtot + "|" + x_fec + "|";
+            // Generar código QR
+            String qrText = "20541177281|01|" + (comprobante != null ? comprobante : "") + "|0.00|" + sumtot + "|" + (x_fec != null ? x_fec : "") + "|";
             BarcodeQRCode qrCode = new BarcodeQRCode(qrText);
             PdfFormXObject qrCodeForm = qrCode.createFormXObject(null, pdfDoc);
             Image qrImage = new Image(qrCodeForm);
@@ -280,7 +318,7 @@
 
             nestedTable.addCell(new Cell().add(new Paragraph("OPE. EXONERADA").setBold()));
             nestedTable.addCell(new Cell().add(new Paragraph("S/").setBold()));
-            nestedTable.addCell(new Cell().add(new Paragraph(String.format("%.2f", sumbi))
+            nestedTable.addCell(new Cell().add(new Paragraph(String.format("%.2f", sumbi != null ? sumbi : 0.0))
                     .setBold().setTextAlignment(TextAlignment.RIGHT)));
 
             nestedTable.addCell(new Cell().add(new Paragraph("OPE. INAFECTA").setBold()));
@@ -300,7 +338,7 @@
 
             nestedTable.addCell(new Cell().add(new Paragraph("TOTAL").setBold()));
             nestedTable.addCell(new Cell().add(new Paragraph("S/").setBold()));
-            nestedTable.addCell(new Cell().add(new Paragraph(String.format("%.2f", sumtot))
+            nestedTable.addCell(new Cell().add(new Paragraph(String.format("%.2f", sumtot != null ? sumtot : 0.0))
                     .setBold().setTextAlignment(TextAlignment.RIGHT)));
 
             Cell nestedTableCell = new Cell().add(nestedTable);
@@ -309,7 +347,7 @@
             document.add(tableMain);
 
             // Total en letras
-            document.add(new Paragraph(total_letras)
+            document.add(new Paragraph(total_letras != null ? total_letras : "")
                     .setBold().setFontSize(9).setTextAlignment(TextAlignment.RIGHT));
 
             // Mensajes legales
@@ -320,23 +358,45 @@
                     .setBold().setFontSize(8).setTextAlignment(TextAlignment.CENTER));
 
             // Información adicional
-            document.add(new Paragraph("CAJERO     : " + x_log_caj)
+            String cajeroText = (x_log_caj != null && !x_log_caj.isEmpty()) ? x_log_caj : "N/A";
+            document.add(new Paragraph("CAJERO     : " + cajeroText)
                     .setBold().setFontSize(8).setMultipliedLeading(0.5f));
 
-            document.add(new Paragraph("MESA NRO: " + s_mesa)
+            String mesaText = (s_mesa != null && !s_mesa.isEmpty()) ? s_mesa : "N/A";
+            document.add(new Paragraph("MESA NRO: " + mesaText)
                     .setBold().setFontSize(8).setMultipliedLeading(0.5f));
 
             // Cerrar el documento
             document.close();
+            pdfDoc.close();
+            writer.close();
+        } else {
+            // No se encontró la venta
+            response.reset();
+            response.setContentType("text/html");
+            out.println("<html><body><h3>Error: No se encontró la venta con ID: " + f_id_mov_vnt + "</h3></body></html>");
         }
 
         // Cerrar conexiones
-        cerrar(rset, pstmt, conn);
-        cerrar(rset2, pstmt2, conn2);
+        if (rset != null) rset.close();
+        if (pstmt != null) pstmt.close();
+        if (conn != null) conn.close();
 
     } catch (Exception e) {
-        out.println("<html><body><h3>Error al generar PDF:</h3><pre>");
-        e.printStackTrace(new java.io.PrintWriter(out));
-        out.println("</pre></body></html>");
+        // En caso de error, limpiar respuesta y mostrar error en HTML
+        try {
+            response.reset();
+            response.setContentType("text/html");
+            out.println("<html><body>");
+            out.println("<h3>Error al generar PDF:</h3>");
+            out.println("<pre>");
+            e.printStackTrace(new java.io.PrintWriter(out));
+            out.println("</pre>");
+            out.println("<p><strong>Mensaje:</strong> " + e.getMessage() + "</p>");
+            out.println("</body></html>");
+        } catch (Exception ex) {
+            // Si no se puede mostrar HTML, imprimir en consola
+            ex.printStackTrace();
+        }
     }
 %>
