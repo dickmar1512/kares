@@ -89,6 +89,11 @@
             
             float height = 550f + (cantItems * 30f); // Altura dinámica: base + margen por item
             
+            // Limpiar el buffer y evitar que el JSP escriba contenido HTML
+            response.reset();
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "inline; filename=factura_" + f_id_mov_vnt + ".pdf");
+
             PdfWriter writer = new PdfWriter(response.getOutputStream());
             PdfDocument pdfDoc = new PdfDocument(writer);
             pdfDoc.setDefaultPageSize(new PageSize(width, height));

@@ -19,6 +19,7 @@ $(function() {
 function openPDFModal(idMovVnt, printUrl) {
     if (printUrl) basePrintUrl = printUrl;
     currentPdfUrl = basePrintUrl + '?f_id_mov_vnt=' + idMovVnt;
+    console.log('Opening PDF Modal for id_mov_vnt:', idMovVnt, 'URL:', currentPdfUrl);
     const viewer = document.getElementById('pdfViewer');
     if (viewer) viewer.src = currentPdfUrl;
     $('#pdfModal').modal('show');
